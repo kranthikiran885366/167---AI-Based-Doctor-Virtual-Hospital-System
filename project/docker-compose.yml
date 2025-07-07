@@ -1,0 +1,127 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:6.0
+    container_name: ai-doctor-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: ai-doctor
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./database/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - ai-doctor-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: ai-doctor-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ai-doctor-network
+
+  # AI Services (Python FastAPI)
+  ai-services:
+    build:
+      context: ./ai-services
+      dockerfile: Dockerfile
+    container_name: ai-doctor-ai-services
+    restart: unless-stopped
+    environment:
+      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/ai-doctor?authSource=admin
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ai-services:/app
+      - ai_models:/app/models
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - ai-doctor-network
+
+  # Backend API (Node.js Express)
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: ai-doctor-backend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/ai-doctor?authSource=admin
+      - JWT_SECRET=ai-doctor-super-secret-jwt-key-2024
+      - AI_SERVICE_URL=http://ai-services:8000
+      - CLIENT_URL=http://localhost:3000
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./server:/app
+      - uploads_data:/app/uploads
+    depends_on:
+      - mongodb
+      - redis
+      - ai-services
+    networks:
+      - ai-doctor-network
+
+  # Frontend (React.js)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: ai-doctor-frontend
+    restart: unless-stopped
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000/api
+      - REACT_APP_AI_SERVICE_URL=http://localhost:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - ai-doctor-network
+
+  # NGINX Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: ai-doctor-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+      - ai-services
+    networks:
+      - ai-doctor-network
+
+volumes:
+  mongodb_data:
+  redis_data:
+  uploads_data:
+  ai_models:
+
+networks:
+  ai-doctor-network:
+    driver: bridge

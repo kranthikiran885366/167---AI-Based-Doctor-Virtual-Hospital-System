@@ -1,0 +1,65 @@
+{
+  "name": "AI Doctor - Virtual Hospital",
+  "short_name": "AI Doctor",
+  "description": "AI-powered virtual hospital and healthcare platform by MVK Solutions",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3B82F6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/medical-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/medical-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "medical", "productivity"],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Emergency Help",
+      "short_name": "Emergency",
+      "description": "Quick access to emergency assistance",
+      "url": "/emergency",
+      "icons": [
+        {
+          "src": "/emergency-icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "AI Diagnosis",
+      "short_name": "Diagnosis",
+      "description": "Start AI-powered diagnosis",
+      "url": "/diagnosis",
+      "icons": [
+        {
+          "src": "/diagnosis-icon.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}
