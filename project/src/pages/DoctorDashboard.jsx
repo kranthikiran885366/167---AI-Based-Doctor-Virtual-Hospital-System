@@ -228,6 +228,18 @@ const DoctorDashboard = () => {
     toast.success(`${medication} added to prescription`);
   };
 
+  const startExamination = (patient) => {
+    setCurrentPatient(patient);
+    setShowExamination(true);
+    toast.info(`Starting examination for ${patient.name}`);
+  };
+
+  const saveExaminationData = (examinationData) => {
+    console.log('Examination data saved:', examinationData);
+    toast.success('Examination completed and saved successfully');
+    setShowExamination(false);
+  };
+
   const PatientCard = ({ patient }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
