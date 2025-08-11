@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
+import {
   FileText,
   User,
   Heart,
@@ -10,7 +10,7 @@ import {
   AlertTriangle,
   Clock,
   Calendar,
-  Family,
+  Users,
   Save,
   Download,
   Share,
