@@ -560,9 +560,12 @@ const DoctorDashboard = () => {
                 <Pill className="w-5 h-5 mx-auto mb-1 text-green-500" />
                 <span className="text-xs font-medium">Prescribe</span>
               </button>
-              <button className="bg-white p-3 rounded-lg hover:bg-gray-100 transition-colors text-center">
-                <Upload className="w-5 h-5 mx-auto mb-1 text-purple-500" />
-                <span className="text-xs font-medium">Upload</span>
+              <button
+                onClick={() => setShowExamination(true)}
+                className="bg-white p-3 rounded-lg hover:bg-gray-100 transition-colors text-center"
+              >
+                <Stethoscope className="w-5 h-5 mx-auto mb-1 text-red-500" />
+                <span className="text-xs font-medium">Examine</span>
               </button>
               <button className="bg-white p-3 rounded-lg hover:bg-gray-100 transition-colors text-center">
                 <Calendar className="w-5 h-5 mx-auto mb-1 text-orange-500" />
