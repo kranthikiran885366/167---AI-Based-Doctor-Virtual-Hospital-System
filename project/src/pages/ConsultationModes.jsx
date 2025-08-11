@@ -571,7 +571,7 @@ const ConsultationModes = () => {
                   isRecording ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse' : 'bg-gray-700 text-white hover:bg-gray-600'
                 }`}
               >
-                <Record className="w-6 h-6" />
+                <Circle className="w-6 h-6 fill-current" />
               </button>
 
               {/* File Share */}
