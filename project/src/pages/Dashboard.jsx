@@ -50,7 +50,10 @@ import {
   Search,
   Filter,
   Maximize2,
-  Minimize2
+  Minimize2,
+  BookOpen,
+  Lock,
+  DollarSign
 } from 'lucide-react';
 import { Line, Doughnut } from 'react-chartjs-2';
 import {
