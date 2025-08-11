@@ -34,6 +34,7 @@ const Navbar = () => {
     { name: 'Home', href: '/', icon: Home, description: 'AI Virtual Hospital' },
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3, description: 'Health Overview' },
     { name: 'Diagnosis', href: '/diagnosis', icon: Stethoscope, description: 'AI Medical Analysis' },
+    { name: 'Examination', href: '/examination-features', icon: Activity, description: 'Complete Medical Examination' },
     { name: 'Reports', href: '/report-analyzer', icon: FileText, description: 'Document Analysis' },
     { name: 'Prescription', href: '/prescription', icon: Pill, description: 'Smart Medications' },
     { name: 'Emergency', href: '/emergency', icon: AlertTriangle, description: '24/7 Urgent Care' },
