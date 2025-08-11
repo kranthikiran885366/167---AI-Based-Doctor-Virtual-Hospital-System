@@ -261,6 +261,20 @@ const Dashboard = () => {
             { name: 'Text Chat', path: '/consultation-modes?mode=text' },
             { name: 'Hybrid Mode', path: '/consultation-modes?mode=hybrid' }
           ]
+        },
+        {
+          name: 'Scheduling Management',
+          icon: Calendar,
+          path: '/scheduling-management',
+          active: false,
+          badge: 'Live',
+          description: 'Calendar & Appointments',
+          submenu: [
+            { name: 'Day View', path: '/scheduling-management?view=day' },
+            { name: 'Week View', path: '/scheduling-management?view=week' },
+            { name: 'Month View', path: '/scheduling-management?view=month' },
+            { name: 'Waitlist', path: '/scheduling-management?tab=waitlist' }
+          ]
         }
       ]
     },
