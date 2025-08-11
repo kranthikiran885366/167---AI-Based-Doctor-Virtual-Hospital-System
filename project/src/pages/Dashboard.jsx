@@ -190,26 +190,26 @@ const Dashboard = () => {
     {
       category: 'Main',
       items: [
-        { 
-          name: 'Dashboard', 
-          icon: Home, 
-          path: '/dashboard', 
+        {
+          name: 'Dashboard',
+          icon: Home,
+          path: '/dashboard',
           active: true,
           badge: null,
           description: 'Overview & Analytics'
         },
-        { 
-          name: 'AI Diagnosis', 
-          icon: Brain, 
-          path: '/ai-diagnosis', 
+        {
+          name: 'AI Diagnosis',
+          icon: Brain,
+          path: '/ai-diagnosis',
           active: false,
           badge: 'AI',
           description: 'Smart Medical Analysis'
         },
-        { 
-          name: 'Medical History', 
-          icon: FileText, 
-          path: '/medical-history', 
+        {
+          name: 'Medical History',
+          icon: FileText,
+          path: '/medical-history',
           active: false,
           badge: null,
           description: 'Patient Records'
@@ -217,103 +217,229 @@ const Dashboard = () => {
       ]
     },
     {
-      category: 'Clinical Tools',
+      category: 'Doctor Functions',
       items: [
-        { 
-          name: 'Diagnostics & Testing', 
-          icon: TestTube, 
-          path: '/diagnostics-testing', 
+        {
+          name: 'Doctor Profile',
+          icon: Stethoscope,
+          path: '/doctor-profile',
           active: false,
-          badge: 'New',
-          description: 'Lab Orders & Results',
+          badge: 'Pro',
+          description: 'License & Credentials',
           submenu: [
-            { name: 'Order Tests', path: '/diagnostics-testing?tab=order' },
-            { name: 'Lab Results', path: '/diagnostics-testing?tab=results' },
-            { name: 'Image Analysis', path: '/diagnostics-testing?tab=imaging' }
+            { name: 'Personal Info', path: '/doctor-profile?tab=profile' },
+            { name: 'Medical License', path: '/doctor-profile?tab=medical' },
+            { name: 'Education', path: '/doctor-profile?tab=education' },
+            { name: 'Documents', path: '/doctor-profile?tab=documents' },
+            { name: 'Availability', path: '/doctor-profile?tab=availability' },
+            { name: 'Pricing', path: '/doctor-profile?tab=pricing' }
           ]
         },
-        { 
-          name: 'Visual Inspection', 
-          icon: Camera, 
-          path: '/visual-inspection', 
+        {
+          name: 'Patient Management',
+          icon: Users,
+          path: '/patient-management',
           active: false,
-          badge: null,
-          description: 'Camera Examinations'
+          badge: 'Live',
+          description: 'Queue & Appointments',
+          submenu: [
+            { name: 'Current Queue', path: '/patient-management?tab=queue' },
+            { name: 'Scheduled', path: '/patient-management?tab=scheduled' },
+            { name: 'History', path: '/patient-management?tab=history' }
+          ]
         },
-        { 
-          name: 'Lab Reports', 
-          icon: Microscope, 
-          path: '/lab-reports-analysis', 
+        {
+          name: 'Consultation Modes',
+          icon: Video,
+          path: '/consultation-modes',
           active: false,
-          badge: null,
-          description: 'Report Analysis'
-        },
-        { 
-          name: 'Prescriptions', 
-          icon: Pill, 
-          path: '/prescription', 
-          active: false,
-          badge: null,
-          description: 'Medication Management'
+          badge: 'HD',
+          description: 'Video/Voice/Text/Hybrid',
+          submenu: [
+            { name: 'Video Call', path: '/consultation-modes?mode=video' },
+            { name: 'Audio Call', path: '/consultation-modes?mode=audio' },
+            { name: 'Text Chat', path: '/consultation-modes?mode=text' },
+            { name: 'Hybrid Mode', path: '/consultation-modes?mode=hybrid' }
+          ]
         }
       ]
     },
     {
-      category: 'Emergency & Support',
+      category: 'Clinical Tools',
       items: [
-        { 
-          name: 'Emergency', 
-          icon: AlertTriangle, 
-          path: '/emergency', 
+        {
+          name: 'Diagnostics & Testing',
+          icon: TestTube,
+          path: '/diagnostics-testing',
           active: false,
-          badge: '24/7',
-          description: 'Urgent Medical Care',
-          urgent: true
+          badge: 'AI',
+          description: 'Lab Orders & Results',
+          submenu: [
+            { name: 'Order Tests', path: '/diagnostics-testing?tab=order' },
+            { name: 'Lab Results', path: '/diagnostics-testing?tab=results' },
+            { name: 'Image Analysis', path: '/diagnostics-testing?tab=imaging' },
+            { name: 'Patient Videos', path: '/diagnostics-testing?tab=videos' }
+          ]
         },
-        { 
-          name: 'Telemedicine', 
-          icon: Video, 
-          path: '/telemedicine', 
+        {
+          name: 'Visual Inspection',
+          icon: Camera,
+          path: '/visual-inspection',
           active: false,
           badge: null,
-          description: 'Virtual Consultations'
+          description: 'Camera Examinations'
         },
-        { 
-          name: 'Doctor Chat', 
-          icon: MessageSquare, 
-          path: '/doctor-chat', 
+        {
+          name: 'Lab Reports',
+          icon: Microscope,
+          path: '/lab-reports-analysis',
           active: false,
-          badge: '3',
-          description: 'Live Support'
+          badge: null,
+          description: 'Report Analysis'
+        },
+        {
+          name: 'Prescriptions',
+          icon: Pill,
+          path: '/prescription',
+          active: false,
+          badge: null,
+          description: 'Digital Prescriptions',
+          submenu: [
+            { name: 'New Prescription', path: '/prescription?tab=new' },
+            { name: 'Drug Database', path: '/prescription?tab=drugs' },
+            { name: 'Interactions', path: '/prescription?tab=interactions' },
+            { name: 'Templates', path: '/prescription?tab=templates' }
+          ]
+        }
+      ]
+    },
+    {
+      category: 'Emergency & Collaboration',
+      items: [
+        {
+          name: 'Emergency',
+          icon: AlertTriangle,
+          path: '/emergency',
+          active: false,
+          badge: '24/7',
+          description: 'SOS & Emergency Care',
+          urgent: true,
+          submenu: [
+            { name: 'SOS Alerts', path: '/emergency?tab=sos' },
+            { name: 'First Aid Guide', path: '/emergency?tab=firstaid' },
+            { name: 'Ambulance Dispatch', path: '/emergency?tab=ambulance' },
+            { name: 'Hospital Coordination', path: '/emergency?tab=hospitals' }
+          ]
+        },
+        {
+          name: 'Doctor Collaboration',
+          icon: Users,
+          path: '/collaboration',
+          active: false,
+          badge: 'Team',
+          description: 'Referrals & Consultations',
+          submenu: [
+            { name: 'Specialist Referrals', path: '/collaboration?tab=referrals' },
+            { name: 'Second Opinions', path: '/collaboration?tab=opinions' },
+            { name: 'Case Discussions', path: '/collaboration?tab=cases' },
+            { name: 'Multi-Doctor Calls', path: '/collaboration?tab=conferences' }
+          ]
+        }
+      ]
+    },
+    {
+      category: 'Documentation & Reports',
+      items: [
+        {
+          name: 'Medical Documentation',
+          icon: FileText,
+          path: '/medical-documentation',
+          active: false,
+          badge: null,
+          description: 'SOAP Notes & Records',
+          submenu: [
+            { name: 'SOAP Notes', path: '/medical-documentation?tab=soap' },
+            { name: 'Digital Signatures', path: '/medical-documentation?tab=signatures' },
+            { name: 'Photo/Video Upload', path: '/medical-documentation?tab=media' },
+            { name: 'Export Records', path: '/medical-documentation?tab=export' }
+          ]
+        },
+        {
+          name: 'Patient Follow-up',
+          icon: Bell,
+          path: '/patient-followup',
+          active: false,
+          badge: 'Auto',
+          description: 'Monitoring & Reminders',
+          submenu: [
+            { name: 'Progress Timeline', path: '/patient-followup?tab=timeline' },
+            { name: 'Medication Reminders', path: '/patient-followup?tab=reminders' },
+            { name: 'Chronic Conditions', path: '/patient-followup?tab=chronic' },
+            { name: 'Wearable Data', path: '/patient-followup?tab=wearables' }
+          ]
+        }
+      ]
+    },
+    {
+      category: 'Business & Compliance',
+      items: [
+        {
+          name: 'Finance & Earnings',
+          icon: DollarSign,
+          path: '/finance-earnings',
+          active: false,
+          badge: null,
+          description: 'Billing & Payments',
+          submenu: [
+            { name: 'Earnings Dashboard', path: '/finance-earnings?tab=dashboard' },
+            { name: 'Fee Management', path: '/finance-earnings?tab=fees' },
+            { name: 'Payment Processing', path: '/finance-earnings?tab=payments' },
+            { name: 'Tax Statements', path: '/finance-earnings?tab=taxes' },
+            { name: 'Invoices', path: '/finance-earnings?tab=invoices' }
+          ]
+        },
+        {
+          name: 'Admin & Compliance',
+          icon: Shield,
+          path: '/admin-compliance',
+          active: false,
+          badge: null,
+          description: 'Regulatory & Training',
+          submenu: [
+            { name: 'HIPAA Compliance', path: '/admin-compliance?tab=hipaa' },
+            { name: 'CME Training', path: '/admin-compliance?tab=cme' },
+            { name: 'Hospital Notices', path: '/admin-compliance?tab=notices' },
+            { name: 'System Training', path: '/admin-compliance?tab=training' }
+          ]
         }
       ]
     },
     {
       category: 'Personal',
       items: [
-        { 
-          name: 'Profile', 
-          icon: User, 
-          path: '/profile', 
+        {
+          name: 'Profile Settings',
+          icon: User,
+          path: '/profile',
           active: false,
           badge: null,
           description: 'Account Settings'
         },
-        { 
-          name: 'Bookmarks', 
-          icon: Bookmark, 
-          path: '/bookmarks', 
+        {
+          name: 'Bookmarks',
+          icon: Bookmark,
+          path: '/bookmarks',
           active: false,
           badge: null,
           description: 'Saved Items'
         },
-        { 
-          name: 'History', 
-          icon: History, 
-          path: '/history', 
+        {
+          name: 'Activity History',
+          icon: History,
+          path: '/history',
           active: false,
           badge: null,
-          description: 'Activity Log'
+          description: 'Session Logs'
         }
       ]
     }
