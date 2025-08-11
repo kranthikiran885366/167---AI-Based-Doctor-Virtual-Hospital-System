@@ -41,8 +41,8 @@ const NurseReminders = () => {
     { id: 'custom', name: 'Custom' }
   ];
 
+  // Load reminders from localStorage on component mount
   useEffect(() => {
-    // Load reminders from localStorage
     const savedReminders = localStorage.getItem('nurseReminders');
     if (savedReminders) {
       setReminders(JSON.parse(savedReminders));
@@ -83,12 +83,14 @@ const NurseReminders = () => {
       setReminders(defaultReminders);
       localStorage.setItem('nurseReminders', JSON.stringify(defaultReminders));
     }
+  }, []); // Only run on mount
 
-    // Set up notification checking
+  // Set up notification checking - separate useEffect for the interval
+  useEffect(() => {
     const checkReminders = () => {
       const now = new Date();
       const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-      
+
       reminders.forEach(reminder => {
         if (reminder.isActive && reminder.time === currentTime) {
           showNotification(reminder);
@@ -98,7 +100,7 @@ const NurseReminders = () => {
 
     const interval = setInterval(checkReminders, 60000); // Check every minute
     return () => clearInterval(interval);
-  }, [reminders]);
+  }, [reminders]); // This is fine since we're not modifying reminders inside
 
   const showNotification = (reminder) => {
     const reminderType = reminderTypes.find(type => type.id === reminder.type);
