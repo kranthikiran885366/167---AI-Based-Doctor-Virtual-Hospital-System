@@ -21,7 +21,8 @@ import {
   Brain,
   Camera,
   Microscope,
-  Zap
+  Zap,
+  TestTube
 } from 'lucide-react';
 import { useUser } from '../context/UserContext.jsx';
 
@@ -40,6 +41,7 @@ const Navbar = () => {
     { name: 'Medical History', href: '/medical-history', icon: FileText, description: 'Patient History Collection' },
     { name: 'Lab Reports', href: '/lab-reports-analysis', icon: Microscope, description: 'Report Analysis & Annotation' },
     { name: 'Visual Inspection', href: '/visual-inspection', icon: Camera, description: 'Camera-based Examination' },
+    { name: 'Diagnostics & Testing', href: '/diagnostics-testing', icon: TestTube, description: 'Order Tests & Analyze Results' },
     { name: 'Emergency', href: '/emergency', icon: AlertTriangle, description: '24/7 Urgent Care' },
   ];
 
