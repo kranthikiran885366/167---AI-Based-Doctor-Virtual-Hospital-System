@@ -11,6 +11,7 @@ import Emergency from './pages/Emergency.jsx';
 import Profile from './pages/Profile.jsx';
 import MedicalRegistration from './pages/MedicalRegistration.jsx';
 import DoctorDashboard from './pages/DoctorDashboard.jsx';
+import ExaminationFeatures from './pages/ExaminationFeatures.jsx';
 import Login from './pages/Login.jsx';
 import AdminPanel from './pages/AdminPanel.jsx';
 import ExamPortal from './pages/ExamPortal.jsx';
