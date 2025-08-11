@@ -352,11 +352,11 @@ const ExaminationFeatures = () => {
                   </div>
                   
                   <button
-                    onClick={() => startDemo(feature.id)}
+                    onClick={() => navigateToPage(feature.id)}
                     className={`w-full py-3 px-4 ${getColorClasses(feature.color)} rounded-xl hover:opacity-90 transition-all duration-200 flex items-center justify-center space-x-2`}
                   >
                     <Play className="w-4 h-4" />
-                    <span className="font-medium">Try Demo</span>
+                    <span className="font-medium">Open Feature</span>
                   </button>
                 </motion.div>
               );
