@@ -771,6 +771,15 @@ const DoctorDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Examination & Diagnosis Modal */}
+      {showExamination && currentPatient && (
+        <ExaminationDiagnosis
+          patient={currentPatient}
+          onSave={saveExaminationData}
+          onClose={() => setShowExamination(false)}
+        />
+      )}
     </div>
   );
 };
