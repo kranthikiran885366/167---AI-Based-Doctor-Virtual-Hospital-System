@@ -127,6 +127,10 @@ function AuthenticatedApp() {
           <Route path="/medical-registration" element={<MedicalRegistration />} />
           <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
           <Route path="/examination-features" element={<ExaminationFeatures />} />
+          <Route path="/medical-history" element={<MedicalHistory />} />
+          <Route path="/lab-reports-analysis" element={<LabReportsAnalysis />} />
+          <Route path="/visual-inspection" element={<VisualInspection />} />
+          <Route path="/ai-diagnosis" element={<AIDiagnosis />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
