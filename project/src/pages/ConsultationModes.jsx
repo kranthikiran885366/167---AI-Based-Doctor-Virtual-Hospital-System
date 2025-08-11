@@ -298,7 +298,7 @@ const ConsultationModes = () => {
             {/* Recording Status */}
             {isRecording && (
               <div className="flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-800 rounded-lg animate-pulse">
-                <Record className="w-4 h-4" />
+                <Circle className="w-4 h-4 fill-current" />
                 <span>Recording</span>
               </div>
             )}
