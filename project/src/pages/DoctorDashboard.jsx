@@ -340,15 +340,24 @@ const DoctorDashboard = () => {
         )}
         
         {(patient.status === 'accepted' || patient.status === 'scheduled') && (
-          <button
-            onClick={() => startConsultation(patient)}
-            className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center space-x-2"
-          >
-            <Video className="w-4 h-4" />
-            <span>Start Consultation</span>
-          </button>
+          <div className="flex space-x-2 flex-1">
+            <button
+              onClick={() => startConsultation(patient)}
+              className="flex-1 bg-blue-500 text-white py-2 px-3 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center space-x-2"
+            >
+              <Video className="w-4 h-4" />
+              <span>Consult</span>
+            </button>
+            <button
+              onClick={() => startExamination(patient)}
+              className="flex-1 bg-green-500 text-white py-2 px-3 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center space-x-2"
+            >
+              <Stethoscope className="w-4 h-4" />
+              <span>Examine</span>
+            </button>
+          </div>
         )}
-        
+
         <button className="bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors">
           <FileText className="w-4 h-4" />
         </button>
