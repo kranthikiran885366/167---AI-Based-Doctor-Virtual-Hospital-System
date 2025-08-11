@@ -33,10 +33,10 @@ const Navbar = () => {
   const navItems = [
     { name: 'Home', href: '/', icon: Home, description: 'AI Virtual Hospital' },
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3, description: 'Health Overview' },
-    { name: 'Diagnosis', href: '/diagnosis', icon: Stethoscope, description: 'AI Medical Analysis' },
-    { name: 'Examination', href: '/examination-features', icon: Activity, description: 'Complete Medical Examination' },
-    { name: 'Reports', href: '/report-analyzer', icon: FileText, description: 'Document Analysis' },
-    { name: 'Prescription', href: '/prescription', icon: Pill, description: 'Smart Medications' },
+    { name: 'AI Diagnosis', href: '/ai-diagnosis', icon: Brain, description: 'AI-Powered Diagnosis' },
+    { name: 'Medical History', href: '/medical-history', icon: FileText, description: 'Patient History Collection' },
+    { name: 'Lab Reports', href: '/lab-reports-analysis', icon: Microscope, description: 'Report Analysis & Annotation' },
+    { name: 'Visual Inspection', href: '/visual-inspection', icon: Camera, description: 'Camera-based Examination' },
     { name: 'Emergency', href: '/emergency', icon: AlertTriangle, description: '24/7 Urgent Care' },
   ];
 
