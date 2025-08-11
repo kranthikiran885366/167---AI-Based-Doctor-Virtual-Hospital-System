@@ -18,6 +18,9 @@ import {
   Activity,
   Heart,
   Shield,
+  Brain,
+  Camera,
+  Microscope,
   Zap
 } from 'lucide-react';
 import { useUser } from '../context/UserContext.jsx';
