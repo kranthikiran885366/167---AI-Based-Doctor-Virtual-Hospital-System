@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, 
@@ -27,7 +27,8 @@ import {
   X,
   Save,
   Send,
-  Download
+  Download,
+  ChevronRight
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useUser } from '../context/UserContext.jsx';
@@ -91,7 +92,9 @@ const MedicalRegistration = () => {
   const [profilePhoto, setProfilePhoto] = useState(professionalProfile?.profilePhoto || null);
   const [uploadProgress, setUploadProgress] = useState({});
   const [verificationStatus, setVerificationStatus] = useState({});
+  const [validationErrors, setValidationErrors] = useState({});
   const [showPreview, setShowPreview] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const fileInputRef = useRef(null);
   const photoInputRef = useRef(null);
 
@@ -105,11 +108,67 @@ const MedicalRegistration = () => {
     { id: 7, title: 'Review & Submit', icon: CheckCircle }
   ];
 
+  const usStates = [
+    { code: 'AL', name: 'Alabama' },
+    { code: 'AK', name: 'Alaska' },
+    { code: 'AZ', name: 'Arizona' },
+    { code: 'AR', name: 'Arkansas' },
+    { code: 'CA', name: 'California' },
+    { code: 'CO', name: 'Colorado' },
+    { code: 'CT', name: 'Connecticut' },
+    { code: 'DE', name: 'Delaware' },
+    { code: 'FL', name: 'Florida' },
+    { code: 'GA', name: 'Georgia' },
+    { code: 'HI', name: 'Hawaii' },
+    { code: 'ID', name: 'Idaho' },
+    { code: 'IL', name: 'Illinois' },
+    { code: 'IN', name: 'Indiana' },
+    { code: 'IA', name: 'Iowa' },
+    { code: 'KS', name: 'Kansas' },
+    { code: 'KY', name: 'Kentucky' },
+    { code: 'LA', name: 'Louisiana' },
+    { code: 'ME', name: 'Maine' },
+    { code: 'MD', name: 'Maryland' },
+    { code: 'MA', name: 'Massachusetts' },
+    { code: 'MI', name: 'Michigan' },
+    { code: 'MN', name: 'Minnesota' },
+    { code: 'MS', name: 'Mississippi' },
+    { code: 'MO', name: 'Missouri' },
+    { code: 'MT', name: 'Montana' },
+    { code: 'NE', name: 'Nebraska' },
+    { code: 'NV', name: 'Nevada' },
+    { code: 'NH', name: 'New Hampshire' },
+    { code: 'NJ', name: 'New Jersey' },
+    { code: 'NM', name: 'New Mexico' },
+    { code: 'NY', name: 'New York' },
+    { code: 'NC', name: 'North Carolina' },
+    { code: 'ND', name: 'North Dakota' },
+    { code: 'OH', name: 'Ohio' },
+    { code: 'OK', name: 'Oklahoma' },
+    { code: 'OR', name: 'Oregon' },
+    { code: 'PA', name: 'Pennsylvania' },
+    { code: 'RI', name: 'Rhode Island' },
+    { code: 'SC', name: 'South Carolina' },
+    { code: 'SD', name: 'South Dakota' },
+    { code: 'TN', name: 'Tennessee' },
+    { code: 'TX', name: 'Texas' },
+    { code: 'UT', name: 'Utah' },
+    { code: 'VT', name: 'Vermont' },
+    { code: 'VA', name: 'Virginia' },
+    { code: 'WA', name: 'Washington' },
+    { code: 'WV', name: 'West Virginia' },
+    { code: 'WI', name: 'Wisconsin' },
+    { code: 'WY', name: 'Wyoming' },
+    { code: 'DC', name: 'District of Columbia' }
+  ];
+
   const specializations = [
     'Internal Medicine', 'Cardiology', 'Dermatology', 'Emergency Medicine',
     'Family Medicine', 'Gastroenterology', 'Neurology', 'Oncology',
     'Orthopedics', 'Pediatrics', 'Psychiatry', 'Radiology',
-    'Surgery', 'Urology', 'Gynecology', 'Anesthesiology'
+    'Surgery', 'Urology', 'Gynecology', 'Anesthesiology',
+    'Pathology', 'Pulmonology', 'Rheumatology', 'Endocrinology',
+    'Nephrology', 'Hematology', 'Infectious Disease', 'Geriatrics'
   ];
 
   const languages = [
@@ -128,11 +187,152 @@ const MedicalRegistration = () => {
     'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
   ];
 
+  // Real-time validation logic
+  const validateField = (field, value) => {
+    const errors = { ...validationErrors };
+    
+    switch (field) {
+      case 'firstName':
+      case 'lastName':
+        if (!value.trim()) {
+          errors[field] = 'This field is required';
+        } else if (value.length < 2) {
+          errors[field] = 'Must be at least 2 characters';
+        } else if (!/^[a-zA-Z\s'-]+$/.test(value)) {
+          errors[field] = 'Only letters, spaces, hyphens and apostrophes allowed';
+        } else {
+          delete errors[field];
+        }
+        break;
+        
+      case 'email':
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!value.trim()) {
+          errors[field] = 'Email is required';
+        } else if (!emailRegex.test(value)) {
+          errors[field] = 'Please enter a valid email address';
+        } else {
+          delete errors[field];
+        }
+        break;
+        
+      case 'phone':
+        const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+        if (!value.trim()) {
+          errors[field] = 'Phone number is required';
+        } else if (!phoneRegex.test(value.replace(/[\s\-\(\)]/g, ''))) {
+          errors[field] = 'Please enter a valid phone number';
+        } else {
+          delete errors[field];
+        }
+        break;
+        
+      case 'licenseNumber':
+        if (!value.trim()) {
+          errors[field] = 'Medical license number is required';
+        } else if (value.length < 4) {
+          errors[field] = 'License number must be at least 4 characters';
+        } else if (!/^[A-Z0-9\-]+$/i.test(value)) {
+          errors[field] = 'Only letters, numbers and hyphens allowed';
+        } else {
+          delete errors[field];
+        }
+        break;
+        
+      case 'npiNumber':
+        if (value && (!/^\d{10}$/.test(value))) {
+          errors[field] = 'NPI must be exactly 10 digits';
+        } else {
+          delete errors[field];
+        }
+        break;
+        
+      case 'graduationYear':
+        const currentYear = new Date().getFullYear();
+        const year = parseInt(value);
+        if (value && (year < 1950 || year > currentYear)) {
+          errors[field] = `Year must be between 1950 and ${currentYear}`;
+        } else {
+          delete errors[field];
+        }
+        break;
+        
+      case 'yearsOfExperience':
+        const experience = parseInt(value);
+        if (value && (experience < 0 || experience > 60)) {
+          errors[field] = 'Experience must be between 0 and 60 years';
+        } else {
+          delete errors[field];
+        }
+        break;
+        
+      case 'bio':
+        if (!value.trim()) {
+          errors[field] = 'Professional bio is required';
+        } else if (value.length < 50) {
+          errors[field] = 'Bio must be at least 50 characters';
+        } else if (value.length > 1000) {
+          errors[field] = 'Bio cannot exceed 1000 characters';
+        } else {
+          delete errors[field];
+        }
+        break;
+        
+      default:
+        break;
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const validateStep = (step) => {
+    const errors = {};
+    
+    switch (step) {
+      case 1: // Personal Information
+        ['firstName', 'lastName', 'email', 'phone'].forEach(field => {
+          validateField(field, formData[field]);
+        });
+        break;
+        
+      case 2: // Medical License
+        ['licenseNumber', 'licenseState'].forEach(field => {
+          validateField(field, formData[field]);
+        });
+        if (formData.npiNumber) {
+          validateField('npiNumber', formData.npiNumber);
+        }
+        break;
+        
+      case 4: // Profile & Bio
+        validateField('bio', formData.bio);
+        if (formData.specializations.length === 0) {
+          errors.specializations = 'Please select at least one specialization';
+        }
+        break;
+        
+      case 5: // Consultation Fees
+        if (!consultationFees.perMinute && !consultationFees.perSession) {
+          errors.fees = 'Please set at least one consultation fee';
+        }
+        break;
+        
+      default:
+        break;
+    }
+    
+    return Object.keys(validationErrors).length === 0;
+  };
+
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+    
+    // Real-time validation
+    validateField(field, value);
   };
 
   const handleArrayField = (field, value, action = 'toggle') => {
@@ -158,6 +358,20 @@ const MedicalRegistration = () => {
 
   const handleFileUpload = async (type, file, metadata = {}) => {
     if (!file) return;
+    
+    // Validate file
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+    
+    if (file.size > maxSize) {
+      toast.error('File size must be less than 10MB');
+      return;
+    }
+    
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Only PDF, JPG, JPEG, and PNG files are allowed');
+      return;
+    }
     
     setUploadProgress(prev => ({ ...prev, [type]: 0 }));
     
@@ -203,6 +417,20 @@ const MedicalRegistration = () => {
   const handlePhotoUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
+      // Validate image file
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      
+      if (file.size > maxSize) {
+        toast.error('Profile photo must be less than 5MB');
+        return;
+      }
+      
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Only JPG, JPEG, and PNG images are allowed');
+        return;
+      }
+      
       const reader = new FileReader();
       reader.onload = () => {
         setProfilePhoto(reader.result);
@@ -250,8 +478,14 @@ const MedicalRegistration = () => {
   };
 
   const submitRegistration = async () => {
+    // Final validation
+    if (!termsAccepted) {
+      toast.error('Please accept the terms and conditions');
+      return;
+    }
+    
     // Validate required fields
-    const requiredFields = ['firstName', 'lastName', 'email', 'licenseNumber', 'licenseState'];
+    const requiredFields = ['firstName', 'lastName', 'email', 'licenseNumber', 'licenseState', 'bio'];
     const missingFields = requiredFields.filter(field => !formData[field]);
     
     if (missingFields.length > 0) {
@@ -264,6 +498,21 @@ const MedicalRegistration = () => {
       return;
     }
 
+    if (!documents.medicalLicense) {
+      toast.error('Medical license document must be uploaded');
+      return;
+    }
+
+    if (!documents.degrees || documents.degrees.length === 0) {
+      toast.error('Medical degree document must be uploaded');
+      return;
+    }
+
+    if (formData.specializations.length === 0) {
+      toast.error('Please select at least one specialization');
+      return;
+    }
+
     const submissionData = {
       ...formData,
       profilePhoto,
@@ -272,12 +521,14 @@ const MedicalRegistration = () => {
     };
 
     updateProfessionalProfile(submissionData);
-    toast.success('Registration submitted for review!');
+    toast.success('Registration submitted for review! You will receive an email confirmation shortly.');
   };
 
   const nextStep = () => {
-    if (currentStep < steps.length) {
+    if (validateStep(currentStep) && currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
+    } else {
+      toast.error('Please complete all required fields before proceeding');
     }
   };
 
@@ -345,6 +596,7 @@ const MedicalRegistration = () => {
                 <Upload className="w-4 h-4" />
                 <span>Choose File</span>
               </label>
+              <p className="text-xs text-gray-500 mt-2">Max size: 10MB | PDF, JPG, PNG</p>
             </div>
           )}
 
@@ -393,6 +645,59 @@ const MedicalRegistration = () => {
             </button>
           ))}
         </div>
+      </div>
+    );
+  };
+
+  const FormField = ({ label, field, type = 'text', required = false, placeholder, options, children }) => {
+    const hasError = validationErrors[field];
+    
+    return (
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+        {children || (
+          type === 'select' ? (
+            <select
+              value={formData[field] || ''}
+              onChange={(e) => handleInputChange(field, e.target.value)}
+              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                hasError ? 'border-red-500' : 'border-gray-300'
+              }`}
+            >
+              <option value="">{placeholder || `Select ${label}`}</option>
+              {options?.map(option => (
+                <option key={option.value || option} value={option.value || option}>
+                  {option.label || option}
+                </option>
+              ))}
+            </select>
+          ) : type === 'textarea' ? (
+            <textarea
+              value={formData[field] || ''}
+              onChange={(e) => handleInputChange(field, e.target.value)}
+              placeholder={placeholder}
+              rows="3"
+              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                hasError ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+          ) : (
+            <input
+              type={type}
+              value={formData[field] || ''}
+              onChange={(e) => handleInputChange(field, e.target.value)}
+              placeholder={placeholder}
+              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                hasError ? 'border-red-500' : 'border-gray-300'
+              }`}
+            />
+          )
+        )}
+        {hasError && (
+          <p className="text-red-500 text-sm mt-1">{hasError}</p>
+        )}
       </div>
     );
   };
@@ -465,90 +770,59 @@ const MedicalRegistration = () => {
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">Personal Information</h2>
                   
                   <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        First Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.firstName}
-                        onChange={(e) => handleInputChange('firstName', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Enter your first name"
-                      />
-                    </div>
+                    <FormField
+                      label="First Name"
+                      field="firstName"
+                      required
+                      placeholder="Enter your first name"
+                    />
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Last Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.lastName}
-                        onChange={(e) => handleInputChange('lastName', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Enter your last name"
-                      />
-                    </div>
+                    <FormField
+                      label="Last Name"
+                      field="lastName"
+                      required
+                      placeholder="Enter your last name"
+                    />
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Email Address <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="your.email@example.com"
-                      />
-                    </div>
+                    <FormField
+                      label="Email Address"
+                      field="email"
+                      type="email"
+                      required
+                      placeholder="your.email@example.com"
+                    />
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Phone Number <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="+1 (555) 123-4567"
-                      />
-                    </div>
+                    <FormField
+                      label="Phone Number"
+                      field="phone"
+                      type="tel"
+                      required
+                      placeholder="+1 (555) 123-4567"
+                    />
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
-                      <input
-                        type="date"
-                        value={formData.dateOfBirth}
-                        onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
+                    <FormField
+                      label="Date of Birth"
+                      field="dateOfBirth"
+                      type="date"
+                    />
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
-                      <select
-                        value={formData.gender}
-                        onChange={(e) => handleInputChange('gender', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="">Select Gender</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                        <option value="prefer-not-to-say">Prefer not to say</option>
-                      </select>
-                    </div>
+                    <FormField
+                      label="Gender"
+                      field="gender"
+                      type="select"
+                      options={[
+                        { value: 'male', label: 'Male' },
+                        { value: 'female', label: 'Female' },
+                        { value: 'other', label: 'Other' },
+                        { value: 'prefer-not-to-say', label: 'Prefer not to say' }
+                      ]}
+                    />
 
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                      <textarea
-                        value={formData.address}
-                        onChange={(e) => handleInputChange('address', e.target.value)}
-                        rows="3"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      <FormField
+                        label="Address"
+                        field="address"
+                        type="textarea"
                         placeholder="Full address including street, city, state, ZIP"
                       />
                     </div>
@@ -574,61 +848,33 @@ const MedicalRegistration = () => {
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Medical License Number <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.licenseNumber}
-                        onChange={(e) => handleInputChange('licenseNumber', e.target.value.toUpperCase())}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Enter your license number"
-                      />
-                    </div>
+                    <FormField
+                      label="Medical License Number"
+                      field="licenseNumber"
+                      required
+                      placeholder="Enter your license number"
+                    />
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        License State <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={formData.licenseState}
-                        onChange={(e) => handleInputChange('licenseState', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="">Select State</option>
-                        <option value="AL">Alabama</option>
-                        <option value="CA">California</option>
-                        <option value="FL">Florida</option>
-                        <option value="NY">New York</option>
-                        <option value="TX">Texas</option>
-                        {/* Add all states */}
-                      </select>
-                    </div>
+                    <FormField
+                      label="License State"
+                      field="licenseState"
+                      type="select"
+                      required
+                      options={usStates.map(state => ({ value: state.code, label: state.name }))}
+                    />
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">NPI Number</label>
-                      <input
-                        type="text"
-                        value={formData.npiNumber}
-                        onChange={(e) => handleInputChange('npiNumber', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="10-digit NPI number"
-                      />
-                    </div>
+                    <FormField
+                      label="NPI Number"
+                      field="npiNumber"
+                      placeholder="10-digit NPI number"
+                    />
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Years of Experience</label>
-                      <input
-                        type="number"
-                        value={formData.yearsOfExperience}
-                        onChange={(e) => handleInputChange('yearsOfExperience', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Number of years"
-                        min="0"
-                        max="50"
-                      />
-                    </div>
+                    <FormField
+                      label="Years of Experience"
+                      field="yearsOfExperience"
+                      type="number"
+                      placeholder="Number of years"
+                    />
                   </div>
 
                   {/* License Verification */}
@@ -722,68 +968,44 @@ const MedicalRegistration = () => {
                   <div className="bg-gray-50 rounded-xl p-6">
                     <h3 className="font-semibold text-gray-900 mb-4">Educational Background</h3>
                     <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Medical School</label>
-                        <input
-                          type="text"
-                          value={formData.medicalSchool}
-                          onChange={(e) => handleInputChange('medicalSchool', e.target.value)}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="Name of medical school"
-                        />
-                      </div>
+                      <FormField
+                        label="Medical School"
+                        field="medicalSchool"
+                        placeholder="Name of medical school"
+                      />
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Graduation Year</label>
-                        <input
-                          type="number"
-                          value={formData.graduationYear}
-                          onChange={(e) => handleInputChange('graduationYear', e.target.value)}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="YYYY"
-                          min="1950"
-                          max={new Date().getFullYear()}
-                        />
-                      </div>
+                      <FormField
+                        label="Graduation Year"
+                        field="graduationYear"
+                        type="number"
+                        placeholder="YYYY"
+                      />
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Residency Program</label>
-                        <input
-                          type="text"
-                          value={formData.residency}
-                          onChange={(e) => handleInputChange('residency', e.target.value)}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="Residency program and hospital"
-                        />
-                      </div>
+                      <FormField
+                        label="Residency Program"
+                        field="residency"
+                        placeholder="Residency program and hospital"
+                      />
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Fellowship (if any)</label>
-                        <input
-                          type="text"
-                          value={formData.fellowship}
-                          onChange={(e) => handleInputChange('fellowship', e.target.value)}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="Fellowship program and hospital"
-                        />
-                      </div>
+                      <FormField
+                        label="Fellowship (if any)"
+                        field="fellowship"
+                        placeholder="Fellowship program and hospital"
+                      />
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Current Hospital/Clinic</label>
-                        <input
-                          type="text"
-                          value={formData.currentHospital}
-                          onChange={(e) => handleInputChange('currentHospital', e.target.value)}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="Current workplace"
-                        />
-                      </div>
+                      <FormField
+                        label="Current Hospital/Clinic"
+                        field="currentHospital"
+                        placeholder="Current workplace"
+                      />
                     </div>
                   </div>
 
                   {/* Specializations */}
                   <div className="bg-gray-50 rounded-xl p-6">
-                    <h3 className="font-semibold text-gray-900 mb-4">Medical Specializations</h3>
+                    <h3 className="font-semibold text-gray-900 mb-4">
+                      Medical Specializations <span className="text-red-500">*</span>
+                    </h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {specializations.map(specialty => (
                         <button
@@ -799,6 +1021,9 @@ const MedicalRegistration = () => {
                         </button>
                       ))}
                     </div>
+                    {validationErrors.specializations && (
+                      <p className="text-red-500 text-sm mt-2">{validationErrors.specializations}</p>
+                    )}
                   </div>
                 </div>
               )}
@@ -836,23 +1061,33 @@ const MedicalRegistration = () => {
                       onChange={handlePhotoUpload}
                       className="hidden"
                     />
-                    <p className="text-sm text-gray-600">Upload a professional headshot</p>
+                    <p className="text-sm text-gray-600">Upload a professional headshot (Max 5MB)</p>
                   </div>
 
                   {/* Bio */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Professional Bio <span className="text-red-500">*</span>
-                    </label>
+                  <FormField
+                    label="Professional Bio"
+                    field="bio"
+                    type="textarea"
+                    required
+                    placeholder="Write a compelling bio that highlights your expertise, experience, and approach to patient care. This will be visible to patients."
+                  >
                     <textarea
-                      value={formData.bio}
+                      value={formData.bio || ''}
                       onChange={(e) => handleInputChange('bio', e.target.value)}
                       rows="6"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        validationErrors.bio ? 'border-red-500' : 'border-gray-300'
+                      }`}
                       placeholder="Write a compelling bio that highlights your expertise, experience, and approach to patient care. This will be visible to patients."
                     />
-                    <p className="text-sm text-gray-500 mt-2">{formData.bio.length}/1000 characters</p>
-                  </div>
+                    <div className="flex justify-between items-center mt-2">
+                      {validationErrors.bio && (
+                        <p className="text-red-500 text-sm">{validationErrors.bio}</p>
+                      )}
+                      <p className="text-sm text-gray-500 ml-auto">{formData.bio?.length || 0}/1000 characters</p>
+                    </div>
+                  </FormField>
 
                   {/* Languages */}
                   <div>
@@ -1014,6 +1249,10 @@ const MedicalRegistration = () => {
                       </p>
                     </div>
                   </div>
+
+                  {validationErrors.fees && (
+                    <p className="text-red-500 text-sm text-center">{validationErrors.fees}</p>
+                  )}
 
                   {/* Fee Summary */}
                   <div className="bg-gray-50 rounded-xl p-6">
@@ -1289,9 +1528,14 @@ const MedicalRegistration = () => {
                   {/* Terms & Conditions */}
                   <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
                     <div className="flex items-start space-x-3">
-                      <input type="checkbox" className="mt-1" />
+                      <input 
+                        type="checkbox" 
+                        checked={termsAccepted}
+                        onChange={(e) => setTermsAccepted(e.target.checked)}
+                        className="mt-1" 
+                      />
                       <div>
-                        <h3 className="font-semibold text-blue-900">Terms & Conditions</h3>
+                        <h3 className="font-semibold text-blue-900">Terms & Conditions *</h3>
                         <p className="text-blue-700 text-sm">
                           By submitting this registration, I agree to the platform's terms of service, 
                           privacy policy, and professional conduct guidelines. I certify that all 
@@ -1305,7 +1549,8 @@ const MedicalRegistration = () => {
                   <div className="text-center">
                     <button
                       onClick={submitRegistration}
-                      className="inline-flex items-center space-x-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                      disabled={!termsAccepted}
+                      className="inline-flex items-center space-x-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Send className="w-6 h-6" />
                       <span>Submit Registration</span>
@@ -1349,7 +1594,8 @@ const MedicalRegistration = () => {
               ) : (
                 <button
                   onClick={submitRegistration}
-                  className="flex items-center space-x-2 px-6 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors"
+                  disabled={!termsAccepted}
+                  className="flex items-center space-x-2 px-6 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send className="w-4 h-4" />
                   <span>Submit</span>
