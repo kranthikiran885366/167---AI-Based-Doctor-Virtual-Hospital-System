@@ -24,11 +24,6 @@ import SchedulingManagement from './pages/SchedulingManagement.jsx';
 import PatientEducation from './pages/PatientEducation.jsx';
 import SecurityPrivacy from './pages/SecurityPrivacy.jsx';
 import MicroFunctionalities from './pages/MicroFunctionalities.jsx';
-import PatientFollowup from './pages/PatientFollowup.jsx';
-import MedicalDocumentation from './pages/MedicalDocumentation.jsx';
-import Collaboration from './pages/Collaboration.jsx';
-import FinanceEarnings from './pages/FinanceEarnings.jsx';
-import AdminCompliance from './pages/AdminCompliance.jsx';
 import Bookmarks from './pages/Bookmarks.jsx';
 import History from './pages/History.jsx';
 import Login from './pages/Login.jsx';
@@ -154,11 +149,6 @@ function AuthenticatedApp() {
           <Route path="/patient-education" element={<PatientEducation />} />
           <Route path="/security-privacy" element={<SecurityPrivacy />} />
           <Route path="/micro-functionalities" element={<MicroFunctionalities />} />
-          <Route path="/patient-followup" element={<PatientFollowup />} />
-          <Route path="/medical-documentation" element={<MedicalDocumentation />} />
-          <Route path="/collaboration" element={<Collaboration />} />
-          <Route path="/finance-earnings" element={<FinanceEarnings />} />
-          <Route path="/admin-compliance" element={<AdminCompliance />} />
           <Route path="/bookmarks" element={<Bookmarks />} />
           <Route path="/history" element={<History />} />
           <Route path="/admin" element={<AdminPanel />} />
