@@ -36,7 +36,7 @@ import {
   X,
   Check
 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'react-toastify';
 
 const DiagnosticsTesting = () => {
   const [activeTab, setActiveTab] = useState('order');
