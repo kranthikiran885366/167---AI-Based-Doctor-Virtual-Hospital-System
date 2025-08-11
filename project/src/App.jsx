@@ -16,6 +16,7 @@ import MedicalHistory from './pages/MedicalHistory.jsx';
 import LabReportsAnalysis from './pages/LabReportsAnalysis.jsx';
 import VisualInspection from './pages/VisualInspection.jsx';
 import AIDiagnosis from './pages/AIDiagnosis.jsx';
+import DiagnosticsTesting from './pages/DiagnosticsTesting.jsx';
 import Login from './pages/Login.jsx';
 import AdminPanel from './pages/AdminPanel.jsx';
 import ExamPortal from './pages/ExamPortal.jsx';
@@ -131,6 +132,7 @@ function AuthenticatedApp() {
           <Route path="/lab-reports-analysis" element={<LabReportsAnalysis />} />
           <Route path="/visual-inspection" element={<VisualInspection />} />
           <Route path="/ai-diagnosis" element={<AIDiagnosis />} />
+          <Route path="/diagnostics-testing" element={<DiagnosticsTesting />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
