@@ -115,6 +115,7 @@ const DoctorDashboard = () => {
   const [cameraEnabled, setCameraEnabled] = useState(true);
   const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [showExamination, setShowExamination] = useState(false);
 
   const [earnings, setEarnings] = useState({
     today: 850,
