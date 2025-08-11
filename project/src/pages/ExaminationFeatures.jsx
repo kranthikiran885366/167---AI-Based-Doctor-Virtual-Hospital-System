@@ -234,9 +234,25 @@ const ExaminationFeatures = () => {
     }
   ];
 
-  const startDemo = (featureId) => {
-    setActiveDemo(featureId);
-    toast.info(`Starting ${features.find(f => f.id === featureId)?.title} demo`);
+  const navigateToPage = (featureId) => {
+    const routes = {
+      history: '/medical-history',
+      reports: '/lab-reports-analysis',
+      inspection: '/visual-inspection',
+      ai: '/ai-diagnosis',
+      devices: '/examination-features', // Will create later
+      investigations: '/examination-features', // Will create later
+      wearable: '/examination-features', // Will create later
+      coding: '/examination-features' // Will create later
+    };
+
+    const route = routes[featureId];
+    if (route && route !== '/examination-features') {
+      window.location.href = route;
+    } else {
+      setActiveDemo(featureId);
+      toast.info(`${features.find(f => f.id === featureId)?.title} - Coming Soon! Full functionality in development.`);
+    }
   };
 
   const getColorClasses = (color) => {
