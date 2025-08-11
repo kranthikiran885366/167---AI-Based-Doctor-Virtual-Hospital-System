@@ -50,6 +50,7 @@ import {
   Headphones
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import ExaminationDiagnosis from '../components/ExaminationDiagnosis.jsx';
 
 const DoctorDashboard = () => {
   const [activeTab, setActiveTab] = useState('queue');
