@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   Stethoscope,
   Camera,
   Upload,
@@ -37,7 +37,8 @@ import {
   Link,
   ChevronRight,
   Play,
-  Pause
+  Pause,
+  Target
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
