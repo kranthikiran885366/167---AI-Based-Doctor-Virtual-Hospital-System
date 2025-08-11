@@ -758,12 +758,71 @@ const ExaminationDiagnosis = ({ patient, onSave, onClose }) => {
                           </div>
                           
                           <div className="relative">
-                            <img 
-                              src={selectedImage.url} 
+                            <img
+                              src={selectedImage.url}
                               alt={selectedImage.name}
                               className="max-w-full max-h-96 object-contain"
+                              onClick={(e) => {
+                                if (annotationMode === 'annotate') {
+                                  const rect = e.target.getBoundingClientRect();
+                                  const x = ((e.clientX - rect.left) / rect.width) * 100;
+                                  const y = ((e.clientY - rect.top) / rect.height) * 100;
+                                  const description = prompt('Enter annotation description:');
+                                  if (description) {
+                                    addAnnotation(x, y, 'point', description);
+                                  }
+                                }
+                              }}
                             />
-                            {/* Annotation overlay would go here */}
+
+                            {/* Annotation markers overlay */}
+                            <div className="absolute inset-0">
+                              {selectedImage.annotations?.map((annotation, index) => (
+                                <div
+                                  key={annotation.id}
+                                  className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
+                                  style={{
+                                    left: `${annotation.x}%`,
+                                    top: `${annotation.y}%`
+                                  }}
+                                  title={annotation.description}
+                                >
+                                  {annotation.type === 'point' && (
+                                    <div className="w-4 h-4 bg-red-500 border-2 border-white rounded-full shadow-lg animate-pulse" />
+                                  )}
+                                  {annotation.type === 'highlight' && (
+                                    <div className="w-8 h-8 bg-yellow-400 opacity-50 rounded-full" />
+                                  )}
+                                  <div className="absolute top-6 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 hover:opacity-100 transition-opacity">
+                                    {annotation.description}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Drawing overlay for highlighting */}
+                            {annotationMode === 'highlight' && (
+                              <canvas
+                                ref={imageCanvasRef}
+                                className="absolute inset-0 w-full h-full cursor-crosshair"
+                                onMouseDown={(e) => setIsDrawing(true)}
+                                onMouseMove={(e) => {
+                                  if (isDrawing && imageCanvasRef.current) {
+                                    const canvas = imageCanvasRef.current;
+                                    const ctx = canvas.getContext('2d');
+                                    const rect = canvas.getBoundingClientRect();
+                                    const x = e.clientX - rect.left;
+                                    const y = e.clientY - rect.top;
+
+                                    ctx.strokeStyle = '#fbbf24';
+                                    ctx.lineWidth = 3;
+                                    ctx.lineTo(x, y);
+                                    ctx.stroke();
+                                  }
+                                }}
+                                onMouseUp={() => setIsDrawing(false)}
+                              />
+                            )}
                           </div>
                           
                           <div className="flex space-x-4 mt-4">
