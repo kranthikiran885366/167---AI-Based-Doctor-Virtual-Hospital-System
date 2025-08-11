@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Bookmark, 
-  Star, 
-  Search, 
-  Filter, 
-  Trash2, 
-  Share2, 
-  Plus, 
-  Folder, 
-  Clock, 
-  User, 
-  FileText, 
-  Video, 
-  Heart, 
-  Brain, 
-  Stethoscope, 
+import {
+  Bookmark,
+  Star,
+  Search,
+  Filter,
+  Trash2,
+  Share2,
+  Plus,
+  Folder,
+  Clock,
+  User,
+  FileText,
+  Video,
+  Heart,
+  Brain,
+  Stethoscope,
   Pill,
   MoreVertical,
   ExternalLink,
@@ -23,7 +23,8 @@ import {
   Archive,
   Tag,
   Calendar,
-  ChevronDown
+  ChevronDown,
+  Eye
 } from 'lucide-react';
 
 const Bookmarks = () => {
