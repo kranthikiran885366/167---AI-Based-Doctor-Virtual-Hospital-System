@@ -17,6 +17,9 @@ import LabReportsAnalysis from './pages/LabReportsAnalysis.jsx';
 import VisualInspection from './pages/VisualInspection.jsx';
 import AIDiagnosis from './pages/AIDiagnosis.jsx';
 import DiagnosticsTesting from './pages/DiagnosticsTesting.jsx';
+import DoctorProfile from './pages/DoctorProfile.jsx';
+import PatientManagement from './pages/PatientManagement.jsx';
+import ConsultationModes from './pages/ConsultationModes.jsx';
 import Login from './pages/Login.jsx';
 import AdminPanel from './pages/AdminPanel.jsx';
 import ExamPortal from './pages/ExamPortal.jsx';
@@ -133,6 +136,9 @@ function AuthenticatedApp() {
           <Route path="/visual-inspection" element={<VisualInspection />} />
           <Route path="/ai-diagnosis" element={<AIDiagnosis />} />
           <Route path="/diagnostics-testing" element={<DiagnosticsTesting />} />
+          <Route path="/doctor-profile" element={<DoctorProfile />} />
+          <Route path="/patient-management" element={<PatientManagement />} />
+          <Route path="/consultation-modes" element={<ConsultationModes />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
