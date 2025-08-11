@@ -440,6 +440,37 @@ const Dashboard = () => {
             { name: 'Hospital Notices', path: '/admin-compliance?tab=notices' },
             { name: 'System Training', path: '/admin-compliance?tab=training' }
           ]
+        },
+        {
+          name: 'Security & Privacy',
+          icon: Lock,
+          path: '/security-privacy',
+          active: false,
+          badge: 'HIPAA',
+          description: 'Authentication & Data Protection',
+          submenu: [
+            { name: 'Two-Factor Auth', path: '/security-privacy?tab=authentication' },
+            { name: 'Session Management', path: '/security-privacy?tab=sessions' },
+            { name: 'Access Control', path: '/security-privacy?tab=permissions' },
+            { name: 'Audit Logs', path: '/security-privacy?tab=audit' },
+            { name: 'Data Privacy', path: '/security-privacy?tab=privacy' }
+          ]
+        },
+        {
+          name: 'Advanced Tools',
+          icon: Zap,
+          path: '/micro-functionalities',
+          active: false,
+          badge: 'Pro',
+          description: 'Micro-Functions & Productivity',
+          submenu: [
+            { name: 'Voice Notes', path: '/micro-functionalities?tool=voice' },
+            { name: 'Quick Translations', path: '/micro-functionalities?tool=translate' },
+            { name: 'Pinned Patients', path: '/micro-functionalities?tool=pins' },
+            { name: 'Private Reminders', path: '/micro-functionalities?tool=reminders' },
+            { name: 'Dark Mode', path: '/micro-functionalities?tool=theme' },
+            { name: 'Offline Mode', path: '/micro-functionalities?tool=offline' }
+          ]
         }
       ]
     },
