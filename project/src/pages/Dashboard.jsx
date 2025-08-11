@@ -391,6 +391,21 @@ const Dashboard = () => {
             { name: 'Chronic Conditions', path: '/patient-followup?tab=chronic' },
             { name: 'Wearable Data', path: '/patient-followup?tab=wearables' }
           ]
+        },
+        {
+          name: 'Patient Education',
+          icon: BookOpen,
+          path: '/patient-education',
+          active: false,
+          badge: 'New',
+          description: 'Educational Content & Plans',
+          submenu: [
+            { name: 'Content Library', path: '/patient-education?tab=library' },
+            { name: 'Custom Content', path: '/patient-education?tab=custom' },
+            { name: 'Diet & Exercise Plans', path: '/patient-education?tab=plans' },
+            { name: 'Gamification', path: '/patient-education?tab=gamification' },
+            { name: 'Create Content', path: '/patient-education?tab=create' }
+          ]
         }
       ]
     },
