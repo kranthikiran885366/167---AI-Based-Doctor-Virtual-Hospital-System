@@ -14,8 +14,8 @@ import {
   Phone, 
   MessageSquare, 
   FileText, 
-  Activity, 
-  Login,
+  Activity,
+  LogIn,
   LogOut,
   Settings,
   CheckCircle,
@@ -145,7 +145,7 @@ const History = () => {
     { id: 'prescription', name: 'Prescriptions', icon: FileText },
     { id: 'emergency', name: 'Emergency', icon: AlertTriangle },
     { id: 'collaboration', name: 'Collaboration', icon: Users },
-    { id: 'login', name: 'Login/Logout', icon: Login },
+    { id: 'login', name: 'Login/Logout', icon: LogIn },
     { id: 'settings', name: 'Settings', icon: Settings }
   ];
 
@@ -156,7 +156,7 @@ const History = () => {
       case 'prescription': return FileText;
       case 'emergency': return AlertTriangle;
       case 'collaboration': return Users;
-      case 'login': return Login;
+      case 'login': return LogIn;
       case 'logout': return LogOut;
       case 'settings': return Settings;
       default: return Activity;
