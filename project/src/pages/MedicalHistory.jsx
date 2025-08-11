@@ -99,7 +99,7 @@ const MedicalHistory = () => {
     { title: 'Chief Complaint', icon: FileText, color: 'red' },
     { title: 'Present Illness', icon: Activity, color: 'orange' },
     { title: 'Past Medical History', icon: Clock, color: 'purple' },
-    { title: 'Family History', icon: Family, color: 'green' },
+    { title: 'Family History', icon: Users, color: 'green' },
     { title: 'Social History', icon: User, color: 'yellow' },
     { title: 'Medications & Allergies', icon: Pill, color: 'pink' },
     { title: 'Review of Systems', icon: Stethoscope, color: 'indigo' },
