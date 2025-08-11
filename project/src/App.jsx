@@ -9,6 +9,7 @@ import ReportAnalyzer from './pages/ReportAnalyzer.jsx';
 import Prescription from './pages/Prescription.jsx';
 import Emergency from './pages/Emergency.jsx';
 import Profile from './pages/Profile.jsx';
+import MedicalRegistration from './pages/MedicalRegistration.jsx';
 import Login from './pages/Login.jsx';
 import AdminPanel from './pages/AdminPanel.jsx';
 import ExamPortal from './pages/ExamPortal.jsx';
@@ -117,6 +118,7 @@ function AuthenticatedApp() {
           <Route path="/prescription" element={<Prescription />} />
           <Route path="/emergency" element={<Emergency />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/medical-registration" element={<MedicalRegistration />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
