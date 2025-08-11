@@ -261,6 +261,14 @@ const Navbar = () => {
                         <span>Profile Settings</span>
                       </Link>
                       <Link
+                        to="/doctor-dashboard"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      >
+                        <Stethoscope className="w-5 h-5" />
+                        <span>Doctor Dashboard</span>
+                      </Link>
+                      <Link
                         to="/settings"
                         onClick={() => setIsUserMenuOpen(false)}
                         className="flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors"
