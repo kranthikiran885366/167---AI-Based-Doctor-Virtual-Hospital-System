@@ -49,30 +49,69 @@ function App() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
-    // Initialize app
+    // Initialize app with simplified approach
     const initializeApp = async () => {
       try {
-        // Initialize offline storage
-        await offlineStorage.initialize();
-        
-        // Initialize notification service
-        await notificationService.initialize();
-        
-        // Register service worker
-        if ('serviceWorker' in navigator) {
-          await navigator.serviceWorker.register('/sw.js');
+        console.log('Starting app initialization...');
+
+        // Initialize offline storage with timeout
+        const storagePromise = Promise.race([
+          offlineStorage.initialize(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Storage timeout')), 3000))
+        ]);
+
+        try {
+          await storagePromise;
+          console.log('Offline storage initialized');
+        } catch (error) {
+          console.warn('Offline storage failed, continuing without it:', error);
         }
-        
+
+        // Initialize notification service with timeout
+        const notificationPromise = Promise.race([
+          notificationService.initialize(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Notification timeout')), 2000))
+        ]);
+
+        try {
+          await notificationPromise;
+          console.log('Notification service initialized');
+        } catch (error) {
+          console.warn('Notification service failed, continuing without it:', error);
+        }
+
+        // Register service worker (optional)
+        if ('serviceWorker' in navigator) {
+          try {
+            await navigator.serviceWorker.register('/sw.js');
+            console.log('Service worker registered');
+          } catch (error) {
+            console.warn('Service worker registration failed:', error);
+          }
+        }
+
         console.log('App initialized successfully');
       } catch (error) {
         console.error('Error initializing app:', error);
       } finally {
+        // Always set loading to false
         setIsLoading(false);
       }
     };
 
-    const timer = setTimeout(initializeApp, 1500);
-    return () => clearTimeout(timer);
+    // Reduce initial delay and add fallback
+    const timer = setTimeout(initializeApp, 800);
+
+    // Fallback: if initialization takes too long, just show the app
+    const fallbackTimer = setTimeout(() => {
+      console.warn('Initialization taking too long, showing app anyway');
+      setIsLoading(false);
+    }, 5000);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(fallbackTimer);
+    };
   }, []);
 
   useEffect(() => {
