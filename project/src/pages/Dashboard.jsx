@@ -339,6 +339,34 @@ const Dashboard = () => {
             { name: 'Interactions', path: '/prescription?tab=interactions' },
             { name: 'Templates', path: '/prescription?tab=templates' }
           ]
+        },
+        {
+          name: 'Examination Features',
+          icon: Stethoscope,
+          path: '/examination-features',
+          active: false,
+          badge: 'Interactive',
+          description: 'Physical Examination Tools',
+          submenu: [
+            { name: 'Virtual Examination', path: '/examination-features?tab=virtual' },
+            { name: 'Vitals Recording', path: '/examination-features?tab=vitals' },
+            { name: 'Physical Assessment', path: '/examination-features?tab=physical' },
+            { name: 'Examination Reports', path: '/examination-features?tab=reports' }
+          ]
+        },
+        {
+          name: 'Medical Calculators',
+          icon: Target,
+          path: '/medical-calculators',
+          active: false,
+          badge: 'Tools',
+          description: 'Clinical Calculation Tools',
+          submenu: [
+            { name: 'BMI Calculator', path: '/medical-calculators?tool=bmi' },
+            { name: 'Dosage Calculator', path: '/medical-calculators?tool=dosage' },
+            { name: 'Risk Assessment', path: '/medical-calculators?tool=risk' },
+            { name: 'Lab Values', path: '/medical-calculators?tool=lab' }
+          ]
         }
       ]
     },
