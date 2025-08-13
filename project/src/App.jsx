@@ -124,49 +124,53 @@ function App() {
 
 function AuthenticatedApp() {
   return (
-    <>
+    <div className="flex h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       <Navbar />
+      <EnhancedSidebar />
+
       <motion.main
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="pt-16"
+        className="flex-1 pt-20 pl-80 overflow-hidden"
       >
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/diagnosis" element={<Diagnosis />} />
-          <Route path="/report-analyzer" element={<ReportAnalyzer />} />
-          <Route path="/prescription" element={<Prescription />} />
-          <Route path="/emergency" element={<Emergency />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/medical-registration" element={<MedicalRegistration />} />
-          <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
-          <Route path="/examination-features" element={<ExaminationFeatures />} />
-          <Route path="/medical-history" element={<MedicalHistory />} />
-          <Route path="/lab-reports-analysis" element={<LabReportsAnalysis />} />
-          <Route path="/visual-inspection" element={<VisualInspection />} />
-          <Route path="/ai-diagnosis" element={<AIDiagnosis />} />
-          <Route path="/diagnostics-testing" element={<DiagnosticsTesting />} />
-          <Route path="/doctor-profile" element={<DoctorProfile />} />
-          <Route path="/patient-management" element={<PatientManagement />} />
-          <Route path="/consultation-modes" element={<ConsultationModes />} />
-          <Route path="/scheduling-management" element={<SchedulingManagement />} />
-          <Route path="/patient-education" element={<PatientEducation />} />
-          <Route path="/security-privacy" element={<SecurityPrivacy />} />
-          <Route path="/micro-functionalities" element={<MicroFunctionalities />} />
-          <Route path="/patient-followup" element={<PatientFollowup />} />
-          <Route path="/medical-documentation" element={<MedicalDocumentation />} />
-          <Route path="/collaboration" element={<Collaboration />} />
-          <Route path="/finance-earnings" element={<FinanceEarnings />} />
-          <Route path="/admin-compliance" element={<AdminCompliance />} />
-          <Route path="/bookmarks" element={<Bookmarks />} />
-          <Route path="/history" element={<History />} />
-          <Route path="/admin" element={<AdminPanel />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <div className="h-full overflow-y-auto">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/diagnosis" element={<Diagnosis />} />
+            <Route path="/report-analyzer" element={<ReportAnalyzer />} />
+            <Route path="/prescription" element={<Prescription />} />
+            <Route path="/emergency" element={<Emergency />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/medical-registration" element={<MedicalRegistration />} />
+            <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
+            <Route path="/examination-features" element={<ExaminationFeatures />} />
+            <Route path="/medical-history" element={<MedicalHistory />} />
+            <Route path="/lab-reports-analysis" element={<LabReportsAnalysis />} />
+            <Route path="/visual-inspection" element={<VisualInspection />} />
+            <Route path="/ai-diagnosis" element={<AIDiagnosis />} />
+            <Route path="/diagnostics-testing" element={<DiagnosticsTesting />} />
+            <Route path="/doctor-profile" element={<DoctorProfile />} />
+            <Route path="/patient-management" element={<PatientManagement />} />
+            <Route path="/consultation-modes" element={<ConsultationModes />} />
+            <Route path="/scheduling-management" element={<SchedulingManagement />} />
+            <Route path="/patient-education" element={<PatientEducation />} />
+            <Route path="/security-privacy" element={<SecurityPrivacy />} />
+            <Route path="/micro-functionalities" element={<MicroFunctionalities />} />
+            <Route path="/patient-followup" element={<PatientFollowup />} />
+            <Route path="/medical-documentation" element={<MedicalDocumentation />} />
+            <Route path="/collaboration" element={<Collaboration />} />
+            <Route path="/finance-earnings" element={<FinanceEarnings />} />
+            <Route path="/admin-compliance" element={<AdminCompliance />} />
+            <Route path="/bookmarks" element={<Bookmarks />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
       </motion.main>
-    </>
+    </div>
   );
 }
 
