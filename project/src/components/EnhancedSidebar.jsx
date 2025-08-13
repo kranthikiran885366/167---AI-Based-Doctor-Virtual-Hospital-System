@@ -271,9 +271,6 @@ const EnhancedSidebar = () => {
     }));
   };
 
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen);
-  };
 
   useEffect(() => {
     if (searchTerm) {
