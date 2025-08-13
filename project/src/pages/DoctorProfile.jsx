@@ -61,15 +61,54 @@ const DoctorProfile = () => {
       nationality: 'American',
       address: '123 Medical Center Dr, New York, NY 10001',
       bio: 'Experienced cardiologist with 15+ years in interventional cardiology. Specialized in complex cardiac procedures and preventive medicine.',
-      languages: ['English', 'Spanish', 'French']
+      languages: ['English', 'Spanish', 'French'],
+      profileVisibility: 'public', // public, private, restricted
+      emergencyAvailable: true,
+      instantOverride: false
     },
     medicalInfo: {
       licenseNumber: 'MD-NY-123456',
       medicalBoard: 'New York State Medical Board',
       licenseExpiry: '2025-12-31',
       licenseStatus: 'verified',
-      primarySpecialization: 'Cardiology',
-      secondarySpecializations: ['Interventional Cardiology', 'Preventive Medicine'],
+      boardValidation: {
+        validatedWith: 'Federation of State Medical Boards (FSMB)',
+        validationDate: '2024-01-15',
+        validationStatus: 'verified',
+        npidNumber: '1234567890'
+      },
+      specializationProfiles: [
+        {
+          id: 1,
+          type: 'primary',
+          specialization: 'Cardiology',
+          subSpecialties: ['Interventional Cardiology', 'Electrophysiology'],
+          boardCertified: true,
+          certificationDate: '2010-06-15',
+          recertificationDate: '2025-06-15',
+          practiceYears: 15
+        },
+        {
+          id: 2,
+          type: 'secondary',
+          specialization: 'Telemedicine',
+          subSpecialties: ['Remote Monitoring', 'Digital Health'],
+          boardCertified: true,
+          certificationDate: '2020-03-10',
+          recertificationDate: '2030-03-10',
+          practiceYears: 4
+        },
+        {
+          id: 3,
+          type: 'additional',
+          specialization: 'Preventive Medicine',
+          subSpecialties: ['Lifestyle Medicine', 'Nutrition Counseling'],
+          boardCertified: false,
+          certificationDate: null,
+          recertificationDate: null,
+          practiceYears: 8
+        }
+      ],
       yearsOfExperience: 15,
       currentHospital: 'Mount Sinai Hospital',
       previousExperience: [
@@ -134,16 +173,60 @@ const DoctorProfile = () => {
       maxConsultationsPerDay: 20,
       consultationDuration: 30,
       breakTime: 15,
-      emergencyAvailable: true
+      emergencyAvailable: true,
+      emergencyOverride: {
+        enabled: true,
+        description: 'Available for emergency consultations 24/7',
+        responseTime: '< 15 minutes',
+        emergencyTypes: ['Cardiac Emergency', 'Critical Care', 'Urgent Consultation'],
+        autoAcceptEmergency: false,
+        emergencyContactNumber: '+1 (555) 999-8888'
+      },
+      instantAvailability: {
+        enabled: false,
+        currentlyAvailable: false,
+        estimatedWaitTime: '0 minutes',
+        maxInstantConsults: 3
+      }
     },
     pricing: {
-      firstConsultation: 200,
-      followUpConsultation: 150,
-      emergencyConsultation: 300,
+      consultationTiers: {
+        firstVisit: {
+          price: 200,
+          duration: 45,
+          description: 'Comprehensive initial assessment'
+        },
+        followUp: {
+          price: 150,
+          duration: 30,
+          description: 'Follow-up consultation'
+        },
+        quickConsult: {
+          price: 75,
+          duration: 15,
+          description: 'Brief check-in or question'
+        },
+        emergency: {
+          price: 300,
+          duration: 60,
+          description: '24/7 emergency consultation'
+        },
+        specialistReferral: {
+          price: 175,
+          duration: 30,
+          description: 'Specialist consultation referral'
+        }
+      },
       pricingModel: 'per-session', // per-session, per-minute
       currency: 'USD',
       paymentMethods: ['Credit Card', 'Insurance', 'PayPal', 'Bank Transfer'],
-      cancellationPolicy: 'Free cancellation up to 24 hours before appointment'
+      cancellationPolicy: 'Free cancellation up to 24 hours before appointment',
+      emergencyOverride: {
+        enabled: true,
+        surchargePercentage: 50,
+        instantAvailability: true,
+        maxEmergencyPerDay: 5
+      }
     }
   });
 
