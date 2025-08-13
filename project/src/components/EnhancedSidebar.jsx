@@ -87,7 +87,7 @@ import { useUser } from '../context/UserContext.jsx';
 import { useLayout } from '../context/LayoutContext.jsx';
 
 const EnhancedSidebar = () => {
-  const { isSidebarOpen: isOpen, toggleSidebar, isMobile } = useResponsiveLayout();
+  const { isSidebarOpen: isOpen, toggleSidebar, isMobile } = useLayout();
   const [expandedSections, setExpandedSections] = useState({
     'clinical-workflow': true,
     'patient-management': false,
