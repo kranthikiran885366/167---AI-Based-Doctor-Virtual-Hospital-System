@@ -793,9 +793,138 @@ const DoctorProfile = () => {
                 </div>
               </div>
 
-              {/* Specializations */}
+              {/* Board Validation */}
               <div className="bg-white rounded-xl shadow-lg p-8">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Specializations</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-6">Official Board Validation</h3>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                      <Shield className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-green-900">Validated with Official Medical Boards</h4>
+                      <p className="text-sm text-green-700">Your credentials have been verified through official channels</p>
+                    </div>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-green-800 mb-1">Validated With</label>
+                      <input
+                        type="text"
+                        value={doctorProfile.medicalInfo.boardValidation.validatedWith}
+                        disabled={!isEditing}
+                        className="w-full px-3 py-2 border border-green-300 rounded-lg bg-white focus:ring-2 focus:ring-green-500 disabled:bg-green-50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-green-800 mb-1">NPID Number</label>
+                      <input
+                        type="text"
+                        value={doctorProfile.medicalInfo.boardValidation.npidNumber}
+                        disabled={!isEditing}
+                        className="w-full px-3 py-2 border border-green-300 rounded-lg bg-white focus:ring-2 focus:ring-green-500 disabled:bg-green-50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-green-800 mb-1">Validation Date</label>
+                      <input
+                        type="date"
+                        value={doctorProfile.medicalInfo.boardValidation.validationDate}
+                        disabled={!isEditing}
+                        className="w-full px-3 py-2 border border-green-300 rounded-lg bg-white focus:ring-2 focus:ring-green-500 disabled:bg-green-50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-green-800 mb-1">Status</label>
+                      <div className="flex items-center space-x-2">
+                        <Verified className="w-5 h-5 text-green-600" />
+                        <span className="text-green-800 font-medium">{doctorProfile.medicalInfo.boardValidation.validationStatus}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Multiple Specialization Profiles */}
+              <div className="bg-white rounded-xl shadow-lg p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-semibold text-gray-900">Specialization Profiles</h3>
+                  {isEditing && (
+                    <button className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                      <Plus className="w-4 h-4" />
+                      <span>Add Specialization</span>
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-6">
+                  {doctorProfile.medicalInfo.specializationProfiles.map((profile, index) => (
+                    <div key={profile.id} className={`p-6 rounded-lg border-2 ${
+                      profile.type === 'primary' ? 'border-blue-200 bg-blue-50' :
+                      profile.type === 'secondary' ? 'border-purple-200 bg-purple-50' :
+                      'border-gray-200 bg-gray-50'
+                    }`}>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            profile.type === 'primary' ? 'bg-blue-100' :
+                            profile.type === 'secondary' ? 'bg-purple-100' : 'bg-gray-100'
+                          }`}>
+                            {profile.type === 'primary' ? <Star className="w-5 h-5 text-blue-600" /> :
+                             profile.type === 'secondary' ? <Heart className="w-5 h-5 text-purple-600" /> :
+                             <Brain className="w-5 h-5 text-gray-600" />}
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-gray-900 capitalize">{profile.type} Specialization</h4>
+                            <p className="text-sm text-gray-600">{profile.specialization}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {profile.boardCertified && (
+                            <div className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                              <Verified className="w-3 h-3" />
+                              <span>Board Certified</span>
+                            </div>
+                          )}
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            profile.type === 'primary' ? 'bg-blue-100 text-blue-800' :
+                            profile.type === 'secondary' ? 'bg-purple-100 text-purple-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {profile.practiceYears} years
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Sub-Specialties</label>
+                          <div className="flex flex-wrap gap-1">
+                            {profile.subSpecialties.map((subSpec, idx) => (
+                              <span key={idx} className="px-2 py-1 bg-white rounded-full text-xs border">
+                                {subSpec}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {profile.boardCertified && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Certification Details</label>
+                            <div className="text-sm text-gray-600">
+                              <div>Certified: {profile.certificationDate}</div>
+                              <div>Recertification: {profile.recertificationDate}</div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Traditional Specializations Section (for backward compatibility) */}
+              <div className="bg-white rounded-xl shadow-lg p-8">
+                <h3 className="text-xl font-semibold text-gray-900 mb-6">Additional Specializations</h3>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Primary Specialization</label>
