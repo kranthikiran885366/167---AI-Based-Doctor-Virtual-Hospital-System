@@ -290,6 +290,20 @@ const Dashboard = () => {
             { name: 'Month View', path: '/scheduling-management?view=month' },
             { name: 'Waitlist', path: '/scheduling-management?tab=waitlist' }
           ]
+        },
+        {
+          name: 'Video Consultation',
+          icon: Video,
+          path: '/video-consultation',
+          active: false,
+          badge: 'Live',
+          description: 'Direct Video Calls',
+          submenu: [
+            { name: 'Start New Call', path: '/video-consultation?action=start' },
+            { name: 'Join Scheduled Call', path: '/video-consultation?action=join' },
+            { name: 'Call History', path: '/video-consultation?tab=history' },
+            { name: 'Recording Management', path: '/video-consultation?tab=recordings' }
+          ]
         }
       ]
     },
