@@ -49,14 +49,28 @@ const LoadingSpinner = () => {
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: "100%" }}
-            transition={{ duration: 1.5 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
             className="h-1 bg-gradient-to-r from-blue-600 to-green-600 rounded-full mx-auto"
             style={{ maxWidth: '200px' }}
           />
-          
-          <p className="text-sm text-gray-500 mt-4">
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-sm text-gray-500 mt-4"
+          >
             Initializing AI Healthcare System...
-          </p>
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="mt-2 text-xs text-gray-400"
+          >
+            Setting up secure medical environment
+          </motion.div>
         </motion.div>
       </div>
     </div>
