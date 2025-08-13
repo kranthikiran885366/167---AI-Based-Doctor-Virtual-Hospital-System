@@ -141,9 +141,10 @@ function App() {
   }
 
   return (
-    <UserProvider>
-      <LayoutProvider>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <ErrorBoundary>
+      <UserProvider>
+        <LayoutProvider>
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
           {/* Offline indicator */}
           {!isOnline && (
             <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-white text-center py-2 text-sm z-50">
@@ -161,9 +162,10 @@ function App() {
 
           {/* PWA Installer */}
           <PWAInstaller />
-        </div>
-      </LayoutProvider>
-    </UserProvider>
+          </div>
+        </LayoutProvider>
+      </UserProvider>
+    </ErrorBoundary>
   );
 }
 
