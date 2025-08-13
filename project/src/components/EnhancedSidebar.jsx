@@ -80,9 +80,11 @@ import {
   ZoomIn,
   ZoomOut,
   Menu,
-  X
+  X,
+  Calculator
 } from 'lucide-react';
 import { useUser } from '../context/UserContext.jsx';
+import { useResponsiveLayout } from '../hooks/useResponsiveLayout.js';
 
 const EnhancedSidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
