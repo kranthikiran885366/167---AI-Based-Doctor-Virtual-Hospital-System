@@ -132,6 +132,7 @@ function AuthenticatedApp() {
       <Navbar />
       <EnhancedSidebar />
       <ResponsiveMainContent />
+      <WorkflowGuide />
     </div>
   );
 }
