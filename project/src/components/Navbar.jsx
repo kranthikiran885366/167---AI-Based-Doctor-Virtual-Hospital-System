@@ -25,6 +25,7 @@ import {
   TestTube
 } from 'lucide-react';
 import { useUser } from '../context/UserContext.jsx';
+import { useLayout } from '../context/LayoutContext.jsx';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
