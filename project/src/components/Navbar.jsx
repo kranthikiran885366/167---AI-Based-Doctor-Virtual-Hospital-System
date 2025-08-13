@@ -34,6 +34,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useUser();
+  const { toggleSidebar, isMobile } = useLayout();
 
   const navItems = [
     { name: 'Home', href: '/', icon: Home, description: 'AI Virtual Hospital' },
