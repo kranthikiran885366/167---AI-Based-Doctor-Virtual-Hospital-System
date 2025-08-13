@@ -36,6 +36,7 @@ import Login from './pages/Login.jsx';
 import AdminPanel from './pages/AdminPanel.jsx';
 import ExamPortal from './pages/ExamPortal.jsx';
 import { UserProvider } from './context/UserContext.jsx';
+import { LayoutProvider } from './context/LayoutContext.jsx';
 import LoadingSpinner from './components/LoadingSpinner.jsx';
 import PWAInstaller from './components/PWAInstaller.jsx';
 import { notificationService } from './utils/notifications.js';
