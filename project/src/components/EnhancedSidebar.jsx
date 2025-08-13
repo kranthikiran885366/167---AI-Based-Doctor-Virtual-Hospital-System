@@ -87,7 +87,7 @@ import { useUser } from '../context/UserContext.jsx';
 import { useResponsiveLayout } from '../hooks/useResponsiveLayout.js';
 
 const EnhancedSidebar = () => {
-  const [isOpen, setIsOpen] = useState(true);
+  const { isSidebarOpen: isOpen, toggleSidebar, isMobile } = useResponsiveLayout();
   const [expandedSections, setExpandedSections] = useState({
     'clinical-workflow': true,
     'patient-management': false,
@@ -103,7 +103,7 @@ const EnhancedSidebar = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredNavigation, setFilteredNavigation] = useState(null);
-  
+
   const location = useLocation();
   const { user } = useUser();
 
