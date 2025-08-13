@@ -535,6 +535,96 @@ const SchedulingManagement = () => {
           </div>
         )}
 
+        {currentView === 'month' && (
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+            {/* Month Header */}
+            <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white p-6">
+              <h2 className="text-2xl font-bold">
+                {currentDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
+              </h2>
+              <p className="opacity-90">Monthly Overview</p>
+            </div>
+
+            {/* Month Grid */}
+            <div className="p-4">
+              {/* Weekday Headers */}
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                  <div key={day} className="p-2 text-center text-sm font-medium text-gray-600 bg-gray-50 rounded">
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              {/* Month Days */}
+              <div className="grid grid-cols-7 gap-1">
+                {(() => {
+                  const year = currentDate.getFullYear();
+                  const month = currentDate.getMonth();
+                  const firstDay = new Date(year, month, 1);
+                  const lastDay = new Date(year, month + 1, 0);
+                  const startDate = new Date(firstDay);
+                  startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+                  const days = [];
+                  for (let i = 0; i < 42; i++) {
+                    const date = new Date(startDate);
+                    date.setDate(startDate.getDate() + i);
+                    const isCurrentMonth = date.getMonth() === month;
+                    const isToday = date.toDateString() === new Date().toDateString();
+                    const dayAppointments = getAppointmentsForDate(date);
+
+                    days.push(
+                      <div
+                        key={i}
+                        className={`p-2 min-h-[100px] border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 ${
+                          !isCurrentMonth ? 'bg-gray-50 text-gray-400' : 'bg-white'
+                        } ${isToday ? 'ring-2 ring-blue-500' : ''}`}
+                        onClick={() => {
+                          setCurrentDate(new Date(date));
+                          setCurrentView('day');
+                        }}
+                      >
+                        <div className={`text-sm font-medium mb-1 ${
+                          isToday ? 'text-blue-600' : isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
+                        }`}>
+                          {date.getDate()}
+                        </div>
+
+                        {dayAppointments.length > 0 && (
+                          <div className="space-y-1">
+                            {dayAppointments.slice(0, 3).map(appointment => (
+                              <div
+                                key={appointment.id}
+                                className={`p-1 rounded text-xs ${getPriorityColor(appointment.priority)} bg-opacity-20`}
+                              >
+                                <div className="truncate font-medium">{appointment.patientName}</div>
+                                <div className="truncate text-gray-600">{appointment.time}</div>
+                              </div>
+                            ))}
+                            {dayAppointments.length > 3 && (
+                              <div className="text-xs text-gray-500 text-center">
+                                +{dayAppointments.length - 3} more
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {dayAppointments.length === 0 && isCurrentMonth && (
+                          <div className="flex items-center justify-center h-16 text-gray-300">
+                            <Plus className="w-4 h-4" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+                  return days;
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Pending Appointments */}
         <div className="grid lg:grid-cols-3 gap-8 mb-8">
           <div className="lg:col-span-2">
