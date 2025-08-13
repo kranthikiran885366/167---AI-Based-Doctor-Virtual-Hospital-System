@@ -84,7 +84,7 @@ import {
   Calculator
 } from 'lucide-react';
 import { useUser } from '../context/UserContext.jsx';
-import { useResponsiveLayout } from '../hooks/useResponsiveLayout.js';
+import { useLayout } from '../context/LayoutContext.jsx';
 
 const EnhancedSidebar = () => {
   const { isSidebarOpen: isOpen, toggleSidebar, isMobile } = useResponsiveLayout();
