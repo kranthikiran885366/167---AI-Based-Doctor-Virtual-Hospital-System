@@ -39,6 +39,7 @@ import { UserProvider } from './context/UserContext.jsx';
 import { LayoutProvider, useLayout } from './context/LayoutContext.jsx';
 import LoadingSpinner from './components/LoadingSpinner.jsx';
 import WorkflowGuide from './components/WorkflowGuide.jsx';
+import QuickAccessToolbar from './components/QuickAccessToolbar.jsx';
 import PWAInstaller from './components/PWAInstaller.jsx';
 import { notificationService } from './utils/notifications.js';
 import { offlineStorage } from './utils/offlineStorage.js';
