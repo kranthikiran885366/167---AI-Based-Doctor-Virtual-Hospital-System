@@ -12,7 +12,8 @@ export class OfflineStorageService {
       const request = indexedDB.open(this.dbName, this.dbVersion);
 
       request.onerror = () => {
-        reject(new Error('Failed to open IndexedDB'));
+        console.warn('Failed to open IndexedDB');
+        resolve(false);
       };
 
       request.onsuccess = (event) => {
