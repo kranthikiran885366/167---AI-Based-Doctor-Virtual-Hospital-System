@@ -307,12 +307,26 @@ const EnhancedSidebar = () => {
   };
 
   return (
-    <motion.div
-      initial="open"
-      animate={isOpen ? "open" : "closed"}
-      variants={sidebarVariants}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="fixed left-0 top-20 bottom-0 z-40 bg-white/95 backdrop-blur-xl border-r border-gray-200/50 shadow-xl overflow-hidden"
+    <>
+      {/* Mobile Overlay */}
+      {isMobile && isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={toggleSidebar}
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+        />
+      )}
+
+      <motion.div
+        initial="open"
+        animate={isOpen ? "open" : "closed"}
+        variants={sidebarVariants}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className={`fixed left-0 top-20 bottom-0 z-40 bg-white/95 backdrop-blur-xl border-r border-gray-200/50 shadow-xl overflow-hidden ${
+          isMobile ? 'z-50' : ''
+        }`}
     >
       {/* Sidebar Header */}
       <div className="p-4 border-b border-gray-200/50">
@@ -521,7 +535,8 @@ const EnhancedSidebar = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+      </motion.div>
+    </>
   );
 };
 
