@@ -270,22 +270,31 @@ export class NotificationService {
 
   // Initialize notification service
   async initialize() {
-    const permissionGranted = await this.requestPermission();
-    const swRegistered = await this.registerServiceWorker();
-    
-    if (permissionGranted && swRegistered) {
-      // Set up notification click handler
-      if (this.registration) {
-        this.registration.addEventListener('notificationclick', this.handleNotificationClick.bind(this));
+    try {
+      const permissionGranted = await this.requestPermission();
+      const swRegistered = await this.registerServiceWorker();
+
+      if (permissionGranted && swRegistered) {
+        // Set up notification click handler
+        if (this.registration) {
+          this.registration.addEventListener('notificationclick', this.handleNotificationClick.bind(this));
+        }
+
+        // Schedule daily health tips (optional)
+        try {
+          this.scheduleDailyHealthTips();
+        } catch (error) {
+          console.warn('Failed to schedule health tips:', error);
+        }
+
+        return true;
       }
-      
-      // Schedule daily health tips
-      this.scheduleDailyHealthTips();
-      
-      return true;
+
+      return false;
+    } catch (error) {
+      console.warn('Notification service initialization failed:', error);
+      return false;
     }
-    
-    return false;
   }
 
   // Schedule daily health tips
