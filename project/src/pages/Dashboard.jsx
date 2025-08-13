@@ -463,6 +463,20 @@ const Dashboard = () => {
             { name: 'Gamification', path: '/patient-education?tab=gamification' },
             { name: 'Create Content', path: '/patient-education?tab=create' }
           ]
+        },
+        {
+          name: 'Report Analyzer',
+          icon: BarChart3,
+          path: '/report-analyzer',
+          active: false,
+          badge: 'AI',
+          description: 'AI-Powered Report Analysis',
+          submenu: [
+            { name: 'Upload Reports', path: '/report-analyzer?tab=upload' },
+            { name: 'Analysis Results', path: '/report-analyzer?tab=results' },
+            { name: 'Report History', path: '/report-analyzer?tab=history' },
+            { name: 'AI Insights', path: '/report-analyzer?tab=insights' }
+          ]
         }
       ]
     },
