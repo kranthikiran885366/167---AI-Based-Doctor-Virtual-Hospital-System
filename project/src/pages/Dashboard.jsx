@@ -214,8 +214,20 @@ const Dashboard = () => {
           icon: FileText,
           path: '/medical-history',
           active: false,
-          badge: null,
-          description: 'Patient Records'
+          badge: 'Comprehensive',
+          description: 'Complete Patient History Collection',
+          submenu: [
+            { name: 'Patient Information', path: '/medical-history?step=0' },
+            { name: 'Chief Complaint', path: '/medical-history?step=1' },
+            { name: 'Present Illness', path: '/medical-history?step=2' },
+            { name: 'Past Medical History', path: '/medical-history?step=3' },
+            { name: 'Family History', path: '/medical-history?step=4' },
+            { name: 'Social History', path: '/medical-history?step=5' },
+            { name: 'Medications & Allergies', path: '/medical-history?step=6' },
+            { name: 'Review of Systems', path: '/medical-history?step=7' },
+            { name: 'Saved Histories', path: '/medical-history?tab=saved' },
+            { name: 'History Analytics', path: '/medical-history?tab=analytics' }
+          ]
         }
       ]
     },
