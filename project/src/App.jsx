@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from './components/Navbar.jsx';
+import EnhancedSidebar from './components/EnhancedSidebar.jsx';
 import Home from './pages/Home.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Diagnosis from './pages/Diagnosis.jsx';
