@@ -66,6 +66,9 @@ const PatientManagement = () => {
       appointmentType: 'scheduled',
       priority: 'normal',
       chiefComplaint: 'Chest pain and shortness of breath',
+      visitReasonTags: ['cardiac', 'respiratory', 'emergency', 'follow-up'],
+      symptomSeverity: 'moderate',
+      symptomDuration: '2 days',
       waitingTime: 15,
       status: 'waiting',
       paymentStatus: 'paid',
@@ -112,6 +115,9 @@ const PatientManagement = () => {
       appointmentType: 'walk-in',
       priority: 'high',
       chiefComplaint: 'Severe headache and nausea',
+      visitReasonTags: ['neurological', 'acute', 'pain-management'],
+      symptomSeverity: 'severe',
+      symptomDuration: '6 hours',
       waitingTime: 45,
       status: 'waiting',
       paymentStatus: 'pending',
@@ -158,6 +164,9 @@ const PatientManagement = () => {
       appointmentType: 'scheduled',
       priority: 'critical',
       chiefComplaint: 'Difficulty breathing and chest tightness',
+      visitReasonTags: ['respiratory', 'cardiac', 'critical', 'chronic-condition'],
+      symptomSeverity: 'severe',
+      symptomDuration: '1 hour',
       waitingTime: 5,
       status: 'in-consultation',
       paymentStatus: 'paid',
@@ -205,6 +214,9 @@ const PatientManagement = () => {
       appointmentType: 'follow-up',
       priority: 'normal',
       chiefComplaint: 'Routine check-up for diabetes management',
+      visitReasonTags: ['routine', 'diabetes', 'chronic-condition', 'preventive'],
+      symptomSeverity: 'none',
+      symptomDuration: 'ongoing',
       consultationType: 'video',
       status: 'scheduled'
     },
@@ -216,6 +228,9 @@ const PatientManagement = () => {
       appointmentType: 'consultation',
       priority: 'normal',
       chiefComplaint: 'High blood pressure monitoring',
+      visitReasonTags: ['routine', 'hypertension', 'chronic-condition', 'monitoring'],
+      symptomSeverity: 'mild',
+      symptomDuration: 'ongoing',
       consultationType: 'phone',
       status: 'scheduled'
     }
@@ -491,6 +506,49 @@ const PatientManagement = () => {
                                 ))}
                               </div>
                             </div>
+                          </div>
+                        </div>
+
+                        {/* Visit Reason Tags */}
+                        <div className="mb-4">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <FileText className="w-4 h-4 text-gray-500" />
+                            <span className="text-sm font-medium text-gray-700">Visit Context</span>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              patient.symptomSeverity === 'severe' ? 'bg-red-100 text-red-800' :
+                              patient.symptomSeverity === 'moderate' ? 'bg-yellow-100 text-yellow-800' :
+                              patient.symptomSeverity === 'mild' ? 'bg-green-100 text-green-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {patient.symptomSeverity} • {patient.symptomDuration}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {patient.visitReasonTags?.map((tag, i) => {
+                              const tagColors = {
+                                'cardiac': 'bg-red-50 text-red-700 border-red-200',
+                                'respiratory': 'bg-blue-50 text-blue-700 border-blue-200',
+                                'neurological': 'bg-purple-50 text-purple-700 border-purple-200',
+                                'emergency': 'bg-red-100 text-red-800 border-red-300',
+                                'critical': 'bg-red-100 text-red-800 border-red-300',
+                                'acute': 'bg-orange-50 text-orange-700 border-orange-200',
+                                'chronic-condition': 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                                'routine': 'bg-green-50 text-green-700 border-green-200',
+                                'follow-up': 'bg-teal-50 text-teal-700 border-teal-200',
+                                'pain-management': 'bg-pink-50 text-pink-700 border-pink-200',
+                                'preventive': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                'monitoring': 'bg-cyan-50 text-cyan-700 border-cyan-200',
+                                'diabetes': 'bg-amber-50 text-amber-700 border-amber-200',
+                                'hypertension': 'bg-rose-50 text-rose-700 border-rose-200'
+                              };
+                              return (
+                                <span key={i} className={`px-2 py-1 border rounded-full text-xs font-medium ${
+                                  tagColors[tag] || 'bg-gray-50 text-gray-700 border-gray-200'
+                                }`}>
+                                  {tag.replace('-', ' ')}
+                                </span>
+                              );
+                            })}
                           </div>
                         </div>
 
