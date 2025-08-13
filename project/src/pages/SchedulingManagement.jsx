@@ -358,6 +358,101 @@ const SchedulingManagement = () => {
         </div>
 
         {/* Calendar View */}
+        {currentView === 'day' && (
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+            {/* Day Header */}
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">
+                    {currentDate.toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </h2>
+                  <p className="opacity-90">Daily Schedule</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm opacity-90">Time Zone: {timeZone}</p>
+                  <p className="text-sm opacity-90">
+                    {getAppointmentsForDate(currentDate).length} appointments
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Time Slots */}
+            <div className="max-h-96 overflow-y-auto">
+              {timeSlots.map(time => {
+                const dayAppointments = getAppointmentsForDate(currentDate).filter(apt => apt.time === time);
+                const isBlocked = isSlotBlocked(currentDate, time);
+
+                return (
+                  <div key={time} className={`flex border-b border-gray-100 hover:bg-gray-50 ${
+                    isBlocked ? 'bg-red-50' : ''
+                  }`}>
+                    <div className="w-20 p-4 border-r border-gray-200 bg-gray-50 flex items-center">
+                      <span className="text-sm font-medium text-gray-600">{time}</span>
+                    </div>
+                    <div
+                      className="flex-1 p-4 min-h-[80px] cursor-pointer"
+                      onClick={() => !isBlocked && setSelectedSlot({ date: currentDate, time })}
+                    >
+                      {dayAppointments.length > 0 ? (
+                        <div className="space-y-2">
+                          {dayAppointments.map(appointment => (
+                            <div
+                              key={appointment.id}
+                              className={`p-3 rounded-lg ${getPriorityColor(appointment.priority)} bg-white shadow-sm border`}
+                            >
+                              <div className="flex items-center space-x-3">
+                                <img
+                                  src={appointment.patientPhoto}
+                                  alt={appointment.patientName}
+                                  className="w-10 h-10 rounded-full object-cover"
+                                />
+                                <div className="flex-1">
+                                  <p className="font-semibold text-gray-900">{appointment.patientName}</p>
+                                  <p className="text-sm text-gray-600">{appointment.reason}</p>
+                                  <div className="flex items-center space-x-3 mt-1">
+                                    <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(appointment.status)}`}>
+                                      {appointment.status}
+                                    </span>
+                                    <span className="text-xs text-gray-500">{appointment.duration} min</span>
+                                    <span className="text-xs text-gray-500">${appointment.fee}</span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  {appointment.mode === 'video' && <Video className="w-4 h-4 text-blue-500" />}
+                                  {appointment.mode === 'phone' && <Phone className="w-4 h-4 text-green-500" />}
+                                  {appointment.mode === 'text' && <MessageSquare className="w-4 h-4 text-purple-500" />}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="h-full flex items-center justify-center text-gray-400">
+                          {isBlocked ? (
+                            <div className="flex items-center space-x-2 text-red-600">
+                              <AlertTriangle className="w-4 h-4" />
+                              <span className="text-sm">Blocked</span>
+                            </div>
+                          ) : (
+                            <span className="text-sm">Available</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {currentView === 'week' && (
           <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
             {/* Week Header */}
