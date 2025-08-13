@@ -643,6 +643,92 @@ const DoctorProfile = () => {
                     </select>
                   )}
                 </div>
+
+                {/* Profile Visibility Settings */}
+                <div className="mt-6 grid md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Profile Visibility</label>
+                    <select
+                      value={doctorProfile.personalInfo.profileVisibility}
+                      onChange={(e) => setDoctorProfile(prev => ({
+                        ...prev,
+                        personalInfo: { ...prev.personalInfo, profileVisibility: e.target.value }
+                      }))}
+                      disabled={!isEditing}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                    >
+                      <option value="public">🌐 Public - Visible to all patients</option>
+                      <option value="restricted">🔒 Restricted - Invitation only</option>
+                      <option value="private">🚫 Private - Hospital network only</option>
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {doctorProfile.personalInfo.profileVisibility === 'public' && 'Your profile will be discoverable by all patients'}
+                      {doctorProfile.personalInfo.profileVisibility === 'restricted' && 'Only patients with invitation link can book'}
+                      {doctorProfile.personalInfo.profileVisibility === 'private' && 'Only accessible through hospital referrals'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Emergency Availability</label>
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={() => setDoctorProfile(prev => ({
+                          ...prev,
+                          personalInfo: { ...prev.personalInfo, emergencyAvailable: !prev.personalInfo.emergencyAvailable }
+                        }))}
+                        disabled={!isEditing}
+                        className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                          doctorProfile.personalInfo.emergencyAvailable
+                            ? 'bg-red-100 text-red-800 hover:bg-red-200'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        } disabled:opacity-50`}
+                      >
+                        {doctorProfile.personalInfo.emergencyAvailable ? <Zap className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                        <span>{doctorProfile.personalInfo.emergencyAvailable ? 'Emergency Available' : 'Regular Hours Only'}</span>
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {doctorProfile.personalInfo.emergencyAvailable
+                        ? 'Available for emergency consultations 24/7'
+                        : 'Available only during regular working hours'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Instant Override Toggle */}
+                <div className="mt-6 p-4 bg-orange-50 rounded-lg border border-orange-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-orange-900">Instant Availability Override</h4>
+                      <p className="text-sm text-orange-700 mt-1">
+                        Enable emergency login bypass for urgent patient needs
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setDoctorProfile(prev => ({
+                        ...prev,
+                        personalInfo: { ...prev.personalInfo, instantOverride: !prev.personalInfo.instantOverride }
+                      }))}
+                      disabled={!isEditing}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                        doctorProfile.personalInfo.instantOverride
+                          ? 'bg-orange-500 text-white hover:bg-orange-600'
+                          : 'bg-white text-orange-600 border border-orange-300 hover:bg-orange-50'
+                      } disabled:opacity-50`}
+                    >
+                      {doctorProfile.personalInfo.instantOverride ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
+                      <span>{doctorProfile.personalInfo.instantOverride ? 'Override Enabled' : 'Override Disabled'}</span>
+                    </button>
+                  </div>
+                  {doctorProfile.personalInfo.instantOverride && (
+                    <div className="mt-3 p-3 bg-orange-100 rounded-lg">
+                      <div className="flex items-center space-x-2 text-sm text-orange-800">
+                        <AlertTriangle className="w-4 h-4" />
+                        <span>Patients can reach you immediately for emergencies, bypassing normal scheduling</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           )}
