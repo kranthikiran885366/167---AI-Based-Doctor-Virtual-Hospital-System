@@ -21,7 +21,15 @@ import {
   Target,
   Zap,
   Award,
-  TrendingUp
+  TrendingUp,
+  Eye,
+  TestTube,
+  ClipboardList,
+  Calendar,
+  AlertTriangle,
+  PhoneCall,
+  Video,
+  Settings
 } from 'lucide-react';
 
 const WorkflowGuide = () => {
