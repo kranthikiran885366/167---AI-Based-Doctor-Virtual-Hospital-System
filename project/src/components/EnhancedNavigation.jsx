@@ -54,7 +54,6 @@ import {
   Minimize2,
   RefreshCw,
   Upload,
-  CloudUpload,
   Save,
   Send,
   Globe,
