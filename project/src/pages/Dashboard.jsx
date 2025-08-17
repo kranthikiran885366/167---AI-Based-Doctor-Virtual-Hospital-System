@@ -70,6 +70,19 @@ import {
 import { useUser } from '../context/UserContext.jsx';
 import NurseReminders from '../components/NurseReminders.jsx';
 import HealthTrends from '../components/HealthTrends.jsx';
+import {
+  InteractiveTutorial,
+  QuickHelp,
+  FloatingHelpButton,
+  SuccessAnimation,
+  InteractiveTooltip
+} from '../components/InteractiveFeatures.jsx';
+import {
+  InteractiveButton,
+  PageNavigation,
+  QuickActionsPanel,
+  InteractiveCard
+} from '../components/EnhancedNavigation.jsx';
 
 ChartJS.register(
   CategoryScale,
