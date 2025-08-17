@@ -906,6 +906,36 @@ const Dashboard = () => {
           <NurseReminders />
         </AnimatedSection>
       </div>
+
+      {/* Interactive Components */}
+      <InteractiveTutorial
+        isOpen={showTutorial}
+        onClose={() => setShowTutorial(false)}
+        page="dashboard"
+      />
+
+      <QuickHelp
+        isOpen={showHelp}
+        onClose={() => setShowHelp(false)}
+      />
+
+      <QuickActionsPanel
+        isOpen={showQuickActions}
+        onClose={() => setShowQuickActions(false)}
+        actions={floatingQuickActions}
+      />
+
+      <SuccessAnimation
+        isVisible={showSuccess}
+        title="Success!"
+        message={successMessage}
+        onClose={() => setShowSuccess(false)}
+      />
+
+      <FloatingHelpButton
+        onHelpClick={() => setShowHelp(true)}
+        onTutorialClick={() => setShowTutorial(true)}
+      />
     </div>
   );
 };
