@@ -18,6 +18,15 @@ import {
   VolumeX
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import {
+  InteractiveButton,
+  PageNavigation,
+  InteractiveCard
+} from '../components/EnhancedNavigation.jsx';
+import {
+  InteractiveTooltip,
+  SuccessAnimation
+} from '../components/InteractiveFeatures.jsx';
 
 const Emergency = () => {
   const [selectedEmergency, setSelectedEmergency] = useState(null);
