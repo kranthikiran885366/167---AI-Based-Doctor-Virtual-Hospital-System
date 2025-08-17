@@ -627,9 +627,47 @@ const Dashboard = () => {
             </Link>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 quick-actions">
             {quickActions.map((action, index) => (
-              <QuickActionCard key={index} {...action} />
+              <InteractiveCard
+                key={index}
+                clickable
+                hover
+                onClick={action.onClick}
+                className={`p-6 ${action.urgent ? 'ring-2 ring-red-200 animate-pulse' : ''}`}
+              >
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-4">
+                    <InteractiveTooltip content={action.description}>
+                      <div className={`w-14 h-14 bg-gradient-to-r ${action.color} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                        <action.icon className="w-7 h-7 text-white" />
+                      </div>
+                    </InteractiveTooltip>
+                    {action.urgent && (
+                      <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold animate-pulse">
+                        URGENT
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                    {action.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+                    {action.description}
+                  </p>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full font-medium">
+                      {action.stats}
+                    </span>
+                    <div className="flex items-center text-blue-600 font-semibold group-hover:translate-x-1 transition-transform text-sm">
+                      <span className="mr-1">Open</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
+                  </div>
+                </div>
+              </InteractiveCard>
             ))}
           </div>
         </AnimatedSection>
