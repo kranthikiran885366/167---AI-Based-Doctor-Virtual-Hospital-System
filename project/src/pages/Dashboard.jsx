@@ -312,7 +312,12 @@ const Dashboard = () => {
       link: '/ai-diagnosis',
       color: 'from-purple-500 to-indigo-600',
       urgent: false,
-      stats: '98% Accuracy'
+      stats: '98% Accuracy',
+      onClick: () => {
+        navigate('/ai-diagnosis');
+        setSuccessMessage('Navigating to AI Diagnosis...');
+        setShowSuccess(true);
+      }
     },
     {
       title: 'Emergency Care',
@@ -321,7 +326,11 @@ const Dashboard = () => {
       link: '/emergency',
       color: 'from-red-500 to-pink-600',
       urgent: true,
-      stats: '24/7 Available'
+      stats: '24/7 Available',
+      onClick: () => {
+        navigate('/emergency');
+        toast.error('Emergency mode activated! Connecting to medical assistance...');
+      }
     },
     {
       title: 'Lab Reports',
@@ -330,7 +339,12 @@ const Dashboard = () => {
       link: '/lab-reports-analysis',
       color: 'from-emerald-500 to-teal-600',
       urgent: false,
-      stats: '5 sec Analysis'
+      stats: '5 sec Analysis',
+      onClick: () => {
+        navigate('/lab-reports-analysis');
+        setSuccessMessage('Opening Lab Reports Analyzer...');
+        setShowSuccess(true);
+      }
     },
     {
       title: 'Smart Prescription',
@@ -339,7 +353,51 @@ const Dashboard = () => {
       link: '/prescription',
       color: 'from-blue-500 to-cyan-600',
       urgent: false,
-      stats: 'FDA Approved'
+      stats: 'FDA Approved',
+      onClick: () => {
+        navigate('/prescription');
+        setSuccessMessage('Loading Smart Prescription System...');
+        setShowSuccess(true);
+      }
+    }
+  ];
+
+  const floatingQuickActions = [
+    {
+      label: 'New Patient',
+      icon: Users,
+      color: 'from-blue-500 to-blue-600',
+      onClick: () => navigate('/medical-registration')
+    },
+    {
+      label: 'Schedule',
+      icon: Calendar,
+      color: 'from-green-500 to-green-600',
+      onClick: () => navigate('/scheduling-management')
+    },
+    {
+      label: 'Video Call',
+      icon: Video,
+      color: 'from-purple-500 to-purple-600',
+      onClick: () => navigate('/consultation-modes')
+    },
+    {
+      label: 'Reports',
+      icon: FileText,
+      color: 'from-orange-500 to-orange-600',
+      onClick: () => navigate('/medical-documentation')
+    },
+    {
+      label: 'Analytics',
+      icon: BarChart3,
+      color: 'from-indigo-500 to-indigo-600',
+      onClick: () => navigate('/admin-panel')
+    },
+    {
+      label: 'Settings',
+      icon: Settings,
+      color: 'from-gray-500 to-gray-600',
+      onClick: () => navigate('/profile')
     }
   ];
 
