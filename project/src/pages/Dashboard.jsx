@@ -479,6 +479,31 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
+      {/* Page Navigation */}
+      <PageNavigation
+        title="Health Dashboard"
+        subtitle="Your comprehensive AI-powered health monitoring center"
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' }
+        ]}
+        actions={[
+          {
+            children: 'Quick Actions',
+            variant: 'outline',
+            icon: Zap,
+            onClick: () => setShowQuickActions(true),
+            tooltip: 'Access quick medical tools'
+          },
+          {
+            children: 'Help',
+            variant: 'ghost',
+            icon: HelpCircle,
+            onClick: () => setShowHelp(true),
+            tooltip: 'Get help and tutorials'
+          }
+        ]}
+      />
+
       <div className="max-w-7xl mx-auto p-6 space-y-8">
         
         {/* Enhanced Header Section */}
