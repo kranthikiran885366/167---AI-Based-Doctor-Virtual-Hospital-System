@@ -10,7 +10,6 @@ import {
   Share2,
   ExternalLink,
   Download,
-  Print,
   Copy,
   Check,
   Star,
