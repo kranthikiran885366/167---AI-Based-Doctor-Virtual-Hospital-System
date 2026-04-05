@@ -1,957 +1,238 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Shield, 
-  Lock, 
-  Key, 
-  Eye, 
-  EyeOff, 
-  Smartphone, 
-  Clock, 
-  UserCheck, 
-  AlertTriangle, 
-  CheckCircle, 
-  XCircle, 
-  Settings, 
-  History, 
-  Users, 
-  FileText, 
-  Download, 
-  Upload, 
-  Trash2, 
-  Edit, 
-  Save, 
-  RefreshCw, 
-  Bell, 
-  Globe, 
-  Monitor, 
-  Fingerprint, 
-  Scan, 
-  Database, 
-  Server, 
-  Wifi, 
-  HardDrive, 
-  Activity, 
-  MapPin, 
-  Calendar, 
-  Search, 
-  Filter,
-  LogOut,
-  LogIn,
-  UserX,
-  ShieldCheck,
-  ShieldAlert,
-  ShieldOff
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Shield, Lock, Eye, EyeOff, Key, AlertTriangle, CheckCircle, Smartphone, Globe, Users, FileText, Bell, Download, Trash2, Clock, Activity, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 
-const SecurityPrivacy = () => {
-  const [activeTab, setActiveTab] = useState('authentication');
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
-  const [biometricEnabled, setBiometricEnabled] = useState(false);
-  const [sessionTimeout, setSessionTimeout] = useState(30);
-  const [showPassword, setShowPassword] = useState(false);
+export default function SecurityPrivacy() {
+  const [tab, setTab] = useState('security');
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [passwords, setPasswords] = useState({ current: '', newPw: '', confirm: '' });
 
-  // Security settings state
-  const [securitySettings, setSecuritySettings] = useState({
-    passwordRequirements: {
-      minLength: 12,
-      requireUppercase: true,
-      requireNumbers: true,
-      requireSymbols: true,
-      preventReuse: 5
-    },
-    sessionSettings: {
-      timeout: 30,
-      maxConcurrentSessions: 3,
-      requireReauth: true,
-      logoutOnBrowserClose: true
-    },
-    auditSettings: {
-      logAllAccess: true,
-      retentionPeriod: 90,
-      alertOnSuspicious: true,
-      exportEnabled: true
-    }
-  });
-
-  // Access logs data
-  const [accessLogs, setAccessLogs] = useState([
-    {
-      id: 1,
-      user: 'Dr. Sarah Johnson',
-      action: 'Patient Record Access',
-      resource: 'John Smith - Medical History',
-      timestamp: '2024-01-15 14:32:18',
-      ipAddress: '192.168.1.100',
-      device: 'Chrome on MacOS',
-      location: 'New York, NY',
-      status: 'success',
-      riskLevel: 'low'
-    },
-    {
-      id: 2,
-      user: 'Dr. Sarah Johnson',
-      action: 'Prescription Created',
-      resource: 'Maria Garcia - Prescription #12345',
-      timestamp: '2024-01-15 14:28:45',
-      ipAddress: '192.168.1.100',
-      device: 'Chrome on MacOS',
-      location: 'New York, NY',
-      status: 'success',
-      riskLevel: 'low'
-    },
-    {
-      id: 3,
-      user: 'Unknown User',
-      action: 'Failed Login Attempt',
-      resource: 'Authentication System',
-      timestamp: '2024-01-15 13:45:12',
-      ipAddress: '203.45.67.89',
-      device: 'Unknown Browser',
-      location: 'Unknown Location',
-      status: 'failed',
-      riskLevel: 'high'
-    }
-  ]);
-
-  // Active sessions
-  const [activeSessions, setActiveSessions] = useState([
-    {
-      id: 1,
-      device: 'Chrome on MacOS',
-      location: 'New York, NY',
-      ipAddress: '192.168.1.100',
-      loginTime: '2024-01-15 09:00:00',
-      lastActivity: '2024-01-15 14:30:00',
-      current: true,
-      trusted: true
-    },
-    {
-      id: 2,
-      device: 'Safari on iPhone',
-      location: 'New York, NY',
-      ipAddress: '192.168.1.105',
-      loginTime: '2024-01-15 08:30:00',
-      lastActivity: '2024-01-15 12:15:00',
-      current: false,
-      trusted: true
-    },
-    {
-      id: 3,
-      device: 'Firefox on Windows',
-      location: 'Chicago, IL',
-      ipAddress: '10.0.0.50',
-      loginTime: '2024-01-14 16:20:00',
-      lastActivity: '2024-01-14 18:45:00',
-      current: false,
-      trusted: false
-    }
-  ]);
-
-  // Role-based permissions
-  const [rolePermissions, setRolePermissions] = useState([
-    {
-      role: 'Senior Doctor',
-      permissions: {
-        patientRecords: { read: true, write: true, delete: true },
-        prescriptions: { read: true, write: true, delete: true },
-        labResults: { read: true, write: true, delete: false },
-        billing: { read: true, write: false, delete: false },
-        administration: { read: true, write: true, delete: false }
-      },
-      users: ['Dr. Sarah Johnson', 'Dr. Michael Brown']
-    },
-    {
-      role: 'Junior Doctor',
-      permissions: {
-        patientRecords: { read: true, write: true, delete: false },
-        prescriptions: { read: true, write: true, delete: false },
-        labResults: { read: true, write: false, delete: false },
-        billing: { read: false, write: false, delete: false },
-        administration: { read: false, write: false, delete: false }
-      },
-      users: ['Dr. Emily Chen', 'Dr. Robert Wilson']
-    },
-    {
-      role: 'Nurse',
-      permissions: {
-        patientRecords: { read: true, write: false, delete: false },
-        prescriptions: { read: true, write: false, delete: false },
-        labResults: { read: true, write: false, delete: false },
-        billing: { read: false, write: false, delete: false },
-        administration: { read: false, write: false, delete: false }
-      },
-      users: ['Nurse Jennifer Davis', 'Nurse Mark Thompson']
-    }
-  ]);
-
-  // Data anonymization settings
-  const [anonymizationSettings, setAnonymizationSettings] = useState({
-    autoAnonymize: {
-      enabled: true,
-      afterDays: 2555, // 7 years
-      excludeActivePatients: true
-    },
-    anonymizationLevel: 'full', // partial, full, custom
-    fieldsToAnonymize: [
-      'name', 'address', 'phone', 'email', 'ssn', 'dob'
-    ],
-    retainClinicalData: true
-  });
-
-  const enable2FA = async () => {
-    // Simulate enabling 2FA
-    setTwoFactorEnabled(true);
-    toast.success('Two-factor authentication enabled');
+  const calcStrength = (pw) => {
+    let score = 0;
+    if (pw.length >= 8) score++;
+    if (pw.length >= 12) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    return score;
   };
 
-  const disable2FA = () => {
-    setTwoFactorEnabled(false);
-    toast.success('Two-factor authentication disabled');
+  const ACTIVITY_LOG = [
+    { action: 'Login', location: 'New York, US', device: 'Chrome · Windows', time: 'Just now', success: true },
+    { action: 'Password changed', location: 'New York, US', device: 'Chrome · Windows', time: '3 days ago', success: true },
+    { action: 'Failed login attempt', location: 'Unknown', device: 'Unknown browser', time: '5 days ago', success: false },
+    { action: 'Profile updated', location: 'New York, US', device: 'Safari · iPhone', time: '1 week ago', success: true },
+    { action: 'Data export', location: 'New York, US', device: 'Chrome · Windows', time: '2 weeks ago', success: true },
+  ];
+
+  const PRIVACY_SETTINGS = [
+    { key: 'profileVisible', label: 'Profile Visibility', desc: 'Allow other doctors to find and view your profile', enabled: true },
+    { key: 'activityStatus', label: 'Activity Status', desc: 'Show when you are online to patients', enabled: true },
+    { key: 'analyticsSharing', label: 'Analytics Sharing', desc: 'Share anonymized usage data to improve the platform', enabled: false },
+    { key: 'marketingEmails', label: 'Marketing Emails', desc: 'Receive product updates and newsletters', enabled: false },
+  ];
+
+  const [privacy, setPrivacy] = useState(PRIVACY_SETTINGS.reduce((acc, s) => ({ ...acc, [s.key]: s.enabled }), {}));
+
+  const updatePassword = () => {
+    if (!passwords.current || !passwords.newPw || !passwords.confirm) { toast.error('All fields required'); return; }
+    if (passwords.newPw !== passwords.confirm) { toast.error('Passwords do not match'); return; }
+    if (passwordStrength < 3) { toast.error('Password too weak'); return; }
+    toast.success('Password updated successfully');
+    setPasswords({ current: '', newPw: '', confirm: '' });
   };
 
-  const enableBiometric = async () => {
-    try {
-      // Check if biometric authentication is available
-      if ('PublicKeyCredential' in window) {
-        setBiometricEnabled(true);
-        toast.success('Biometric authentication enabled');
-      } else {
-        toast.error('Biometric authentication not supported on this device');
-      }
-    } catch (error) {
-      toast.error('Failed to enable biometric authentication');
-    }
-  };
+  const tabs = [
+    { id: 'security', label: 'Security', icon: Shield },
+    { id: 'privacy', label: 'Privacy', icon: Eye },
+    { id: 'activity', label: 'Activity Log', icon: Activity },
+  ];
 
-  const terminateSession = (sessionId) => {
-    setActiveSessions(prev => prev.filter(session => session.id !== sessionId));
-    toast.success('Session terminated');
-  };
-
-  const lockSensitiveData = (patientId) => {
-    toast.success('Patient data locked - additional authorization required');
-  };
-
-  const exportAccessLogs = () => {
-    const csvContent = accessLogs.map(log => 
-      `${log.timestamp},${log.user},${log.action},${log.resource},${log.status},${log.riskLevel}`
-    ).join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'access_logs.csv';
-    a.click();
-    
-    toast.success('Access logs exported');
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'success': return 'text-green-600 bg-green-100';
-      case 'failed': return 'text-red-600 bg-red-100';
-      case 'warning': return 'text-yellow-600 bg-yellow-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
-
-  const getRiskColor = (risk) => {
-    switch (risk) {
-      case 'low': return 'text-green-600 bg-green-100';
-      case 'medium': return 'text-yellow-600 bg-yellow-100';
-      case 'high': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
+  const strengthLabel = ['', 'Weak', 'Fair', 'Good', 'Strong', 'Excellent'];
+  const strengthColor = ['', 'bg-red-500', 'bg-amber-500', 'bg-yellow-500', 'bg-green-400', 'bg-green-600'];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 pt-24 pb-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">Security & Privacy</h1>
-              <p className="text-gray-600">Manage authentication, access controls, and data protection</p>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 px-4 py-2 bg-green-100 text-green-800 rounded-lg">
-                <ShieldCheck className="w-5 h-5" />
-                <span className="font-medium">HIPAA Compliant</span>
+    <div className="p-6 max-w-4xl mx-auto">
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="section-label">Account</span>
+          <span className="text-[#CBD5E1] text-xs">·</span>
+          <span className="section-label">Security & Privacy</span>
+        </div>
+        <h1 className="font-display text-3xl font-bold text-[#0F172A]">Security & Privacy</h1>
+        <p className="text-[#64748B] mt-1 text-sm">Manage your account security, privacy settings, and access logs</p>
+      </div>
+
+      {/* Security Score */}
+      <div className="card mb-6 bg-gradient-to-r from-[#1E40AF] to-[#2563EB] text-white border-0">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-sm opacity-80 mb-1">Security Score</div>
+            <div className="text-4xl font-bold">72 / 100</div>
+            <div className="text-sm opacity-80 mt-1">Good — enable 2FA to improve</div>
+          </div>
+          <Shield className="w-16 h-16 opacity-20" />
+        </div>
+        <div className="mt-4 h-2 bg-white/20 rounded-full overflow-hidden">
+          <div className="h-full bg-white rounded-full" style={{ width: '72%' }} />
+        </div>
+      </div>
+
+      <div className="flex border-b border-[#E2E8F0] mb-6">
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              tab === t.id ? 'border-[#1E40AF] text-[#1E40AF]' : 'border-transparent text-[#64748B]'
+            }`}>
+            <t.icon className="w-4 h-4" />{t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'security' && (
+        <div className="space-y-6">
+          {/* Password */}
+          <div className="card">
+            <h2 className="font-semibold text-[#0F172A] mb-4">Change Password</h2>
+            <div className="space-y-4 max-w-md">
+              <div>
+                <label className="block text-xs text-[#64748B] mb-1">Current Password</label>
+                <div className="relative">
+                  <input type={showCurrentPw ? 'text' : 'password'} className="input pr-10" placeholder="••••••••" value={passwords.current} onChange={e => setPasswords(p => ({ ...p, current: e.target.value }))} />
+                  <button onClick={() => setShowCurrentPw(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8]">{showCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
+                </div>
               </div>
-              <button
-                onClick={exportAccessLogs}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                <Download className="w-5 h-5" />
-                <span>Export Logs</span>
+              <div>
+                <label className="block text-xs text-[#64748B] mb-1">New Password</label>
+                <div className="relative">
+                  <input type={showNewPw ? 'text' : 'password'} className="input pr-10" placeholder="••••••••" value={passwords.newPw} onChange={e => { setPasswords(p => ({ ...p, newPw: e.target.value })); setPasswordStrength(calcStrength(e.target.value)); }} />
+                  <button onClick={() => setShowNewPw(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8]">{showNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
+                </div>
+                {passwords.newPw && (
+                  <div className="mt-2">
+                    <div className="flex gap-1 mb-1">
+                      {[1, 2, 3, 4, 5].map(i => <div key={i} className={`h-1.5 flex-1 rounded-full ${i <= passwordStrength ? strengthColor[passwordStrength] : 'bg-[#E2E8F0]'}`} />)}
+                    </div>
+                    <div className="text-xs text-[#64748B]">{strengthLabel[passwordStrength]}</div>
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="block text-xs text-[#64748B] mb-1">Confirm New Password</label>
+                <input type="password" className="input" placeholder="••••••••" value={passwords.confirm} onChange={e => setPasswords(p => ({ ...p, confirm: e.target.value }))} />
+                {passwords.confirm && passwords.newPw !== passwords.confirm && <p className="text-xs text-red-500 mt-1">Passwords do not match</p>}
+              </div>
+              <button onClick={updatePassword} className="btn-primary">Update Password</button>
+            </div>
+          </div>
+
+          {/* 2FA */}
+          <div className="card">
+            <h2 className="font-semibold text-[#0F172A] mb-4">Two-Factor Authentication</h2>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] flex items-center justify-center flex-shrink-0">
+                <Smartphone className="w-5 h-5 text-[#1E40AF]" />
+              </div>
+              <div className="flex-1">
+                <div className="font-medium text-[#0F172A]">Authenticator App</div>
+                <div className="text-sm text-[#64748B]">Use Google Authenticator, Authy, or similar app for 2FA</div>
+                <div className={`text-xs mt-1 font-medium ${twoFactorEnabled ? 'text-green-600' : 'text-amber-600'}`}>{twoFactorEnabled ? '✓ Enabled' : 'Not enabled — recommended'}</div>
+              </div>
+              <button onClick={() => { setTwoFactorEnabled(e => !e); toast.success(twoFactorEnabled ? '2FA disabled' : '2FA enabled'); }}
+                className={`btn-secondary text-sm ${twoFactorEnabled ? 'text-red-600 border-red-200' : ''}`}>
+                {twoFactorEnabled ? 'Disable' : 'Enable 2FA'}
               </button>
             </div>
           </div>
-        </motion.div>
 
-        {/* Tab Navigation */}
-        <div className="bg-white rounded-xl shadow-lg p-2 mb-8">
-          <div className="flex flex-wrap space-x-2">
-            {[
-              { id: 'authentication', label: 'Authentication', icon: Key },
-              { id: 'sessions', label: 'Session Management', icon: Clock },
-              { id: 'permissions', label: 'Access Control', icon: UserCheck },
-              { id: 'audit', label: 'Audit Logs', icon: History },
-              { id: 'privacy', label: 'Data Privacy', icon: Shield }
-            ].map(tab => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 px-4 py-3 rounded-lg font-medium transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-blue-500 text-white shadow-lg'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
+          {/* Sessions */}
+          <div className="card">
+            <h2 className="font-semibold text-[#0F172A] mb-4">Active Sessions</h2>
+            <div className="space-y-3">
+              {[
+                { device: 'Chrome — Windows 11', location: 'New York, US', time: 'Active now', current: true },
+                { device: 'Safari — iPhone 14', location: 'New York, US', time: '2 hours ago', current: false },
+                { device: 'Firefox — MacOS', location: 'Boston, US', time: '3 days ago', current: false },
+              ].map((session, i) => (
+                <div key={i} className="flex items-center justify-between p-3 border border-[#E2E8F0] rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Globe className="w-4 h-4 text-[#64748B]" />
+                    <div>
+                      <div className="font-medium text-[#0F172A] text-sm">{session.device}</div>
+                      <div className="text-xs text-[#64748B]">{session.location} · {session.time}</div>
+                    </div>
+                  </div>
+                  {session.current ? (
+                    <span className="text-xs text-green-600 font-medium flex items-center gap-1"><CheckCircle className="w-3 h-3" />Current</span>
+                  ) : (
+                    <button onClick={() => toast.success('Session revoked')} className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"><X className="w-3 h-3" />Revoke</button>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Tab Content */}
-        <AnimatePresence mode="wait">
-          {activeTab === 'authentication' && (
-            <motion.div
-              key="authentication"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              {/* Two-Factor Authentication */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Two-Factor Authentication</h3>
-                
-                <div className="flex items-center justify-between p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                      twoFactorEnabled ? 'bg-green-500' : 'bg-gray-400'
-                    }`}>
-                      <Smartphone className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">SMS & App Authentication</h4>
-                      <p className="text-gray-600">
-                        {twoFactorEnabled ? 'Two-factor authentication is enabled' : 'Enable 2FA for enhanced security'}
-                      </p>
-                    </div>
+      {tab === 'privacy' && (
+        <div className="space-y-4">
+          <div className="card">
+            <h2 className="font-semibold text-[#0F172A] mb-4">Privacy Settings</h2>
+            <div className="space-y-3">
+              {PRIVACY_SETTINGS.map(setting => (
+                <div key={setting.key} className="flex items-center justify-between p-3 border border-[#E2E8F0] rounded-lg">
+                  <div>
+                    <div className="font-medium text-[#0F172A] text-sm">{setting.label}</div>
+                    <div className="text-xs text-[#64748B]">{setting.desc}</div>
                   </div>
-                  
-                  <button
-                    onClick={twoFactorEnabled ? disable2FA : enable2FA}
-                    className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                      twoFactorEnabled 
-                        ? 'bg-red-500 text-white hover:bg-red-600' 
-                        : 'bg-green-500 text-white hover:bg-green-600'
-                    }`}
-                  >
-                    {twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA'}
+                  <button onClick={() => { setPrivacy(p => ({ ...p, [setting.key]: !p[setting.key] })); toast.success('Setting updated'); }}
+                    className={`w-11 h-6 rounded-full transition-colors relative flex-shrink-0 ${privacy[setting.key] ? 'bg-[#1E40AF]' : 'bg-[#CBD5E1]'}`}>
+                    <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${privacy[setting.key] ? 'translate-x-6' : 'translate-x-1'}`} />
                   </button>
                 </div>
-              </div>
+              ))}
+            </div>
+          </div>
+          <div className="card">
+            <h2 className="font-semibold text-[#0F172A] mb-4">Data Rights</h2>
+            <div className="space-y-3">
+              <button onClick={() => toast.info('Preparing data export...')} className="w-full text-left flex items-center gap-3 p-3 border border-[#E2E8F0] rounded-lg hover:border-[#1E40AF] transition-colors">
+                <Download className="w-4 h-4 text-[#1E40AF]" />
+                <div><div className="font-medium text-[#0F172A] text-sm">Download My Data</div><div className="text-xs text-[#64748B]">Export all data as JSON</div></div>
+              </button>
+              <button onClick={() => toast.error('Account deletion requires email verification')} className="w-full text-left flex items-center gap-3 p-3 border border-red-200 rounded-lg hover:bg-red-50 transition-colors">
+                <Trash2 className="w-4 h-4 text-red-500" />
+                <div><div className="font-medium text-red-600 text-sm">Delete Account</div><div className="text-xs text-red-400">Irreversible — all data will be deleted</div></div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-              {/* Biometric Authentication */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Biometric Authentication</h3>
-                
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="flex items-center justify-between p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        biometricEnabled ? 'bg-purple-500' : 'bg-gray-400'
-                      }`}>
-                        <Fingerprint className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-900">Fingerprint Login</h4>
-                        <p className="text-gray-600 text-sm">
-                          {biometricEnabled ? 'Enabled' : 'Not configured'}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <button
-                      onClick={enableBiometric}
-                      disabled={biometricEnabled}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                        biometricEnabled 
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                          : 'bg-purple-500 text-white hover:bg-purple-600'
-                      }`}
-                    >
-                      {biometricEnabled ? 'Enabled' : 'Setup'}
-                    </button>
+      {tab === 'activity' && (
+        <div className="card">
+          <h2 className="font-semibold text-[#0F172A] mb-4">Security Activity Log</h2>
+          <div className="space-y-3">
+            {ACTIVITY_LOG.map((entry, i) => (
+              <div key={i} className="flex items-start gap-3 p-3 border border-[#E2E8F0] rounded-lg">
+                <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${entry.success ? 'bg-green-500' : 'bg-red-500'}`} />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-[#0F172A] text-sm">{entry.action}</span>
+                    {!entry.success && <span className="text-xs px-1.5 py-0.5 bg-red-100 text-red-700 border border-red-200 rounded">Failed</span>}
                   </div>
-
-                  <div className="flex items-center justify-between p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gray-400 rounded-full flex items-center justify-center">
-                        <Scan className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-900">Face Recognition</h4>
-                        <p className="text-gray-600 text-sm">Not configured</p>
-                      </div>
-                    </div>
-                    
-                    <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                      Setup
-                    </button>
-                  </div>
+                  <div className="text-xs text-[#64748B] mt-0.5">{entry.location} · {entry.device}</div>
                 </div>
+                <span className="text-xs text-[#94A3B8] flex-shrink-0">{entry.time}</span>
               </div>
-
-              {/* Password Requirements */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Password Security</h3>
-                
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-4">Current Requirements</h4>
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-3">
-                        <CheckCircle className="w-5 h-5 text-green-500" />
-                        <span className="text-gray-700">Minimum 12 characters</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <CheckCircle className="w-5 h-5 text-green-500" />
-                        <span className="text-gray-700">Uppercase letters required</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <CheckCircle className="w-5 h-5 text-green-500" />
-                        <span className="text-gray-700">Numbers required</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <CheckCircle className="w-5 h-5 text-green-500" />
-                        <span className="text-gray-700">Special characters required</span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <CheckCircle className="w-5 h-5 text-green-500" />
-                        <span className="text-gray-700">Cannot reuse last 5 passwords</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-4">Change Password</h4>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
-                        <div className="relative">
-                          <input
-                            type={showPassword ? 'text' : 'password'}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 pr-12"
-                          />
-                          <button
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                          >
-                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                          </button>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                        <input
-                          type="password"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
-                        <input
-                          type="password"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      <button className="w-full py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                        Update Password
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {activeTab === 'sessions' && (
-            <motion.div
-              key="sessions"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              {/* Session Settings */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Session Configuration</h3>
-                
-                <div className="grid md:grid-cols-3 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Session Timeout (minutes)</label>
-                    <select 
-                      value={sessionTimeout}
-                      onChange={(e) => setSessionTimeout(parseInt(e.target.value))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value={15}>15 minutes</option>
-                      <option value={30}>30 minutes</option>
-                      <option value={60}>1 hour</option>
-                      <option value={120}>2 hours</option>
-                      <option value={240}>4 hours</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Max Concurrent Sessions</label>
-                    <select className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                      <option value={1}>1 session</option>
-                      <option value={2}>2 sessions</option>
-                      <option value={3}>3 sessions</option>
-                      <option value={5}>5 sessions</option>
-                    </select>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <label className="flex items-center">
-                      <input type="checkbox" className="rounded border-gray-300 text-blue-600" defaultChecked />
-                      <span className="ml-2 text-sm text-gray-700">Require re-authentication for sensitive actions</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input type="checkbox" className="rounded border-gray-300 text-blue-600" defaultChecked />
-                      <span className="ml-2 text-sm text-gray-700">Auto-logout on browser close</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input type="checkbox" className="rounded border-gray-300 text-blue-600" />
-                      <span className="ml-2 text-sm text-gray-700">Remember device for 30 days</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Active Sessions */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Active Sessions</h3>
-                
-                <div className="space-y-4">
-                  {activeSessions.map(session => (
-                    <div key={session.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div className="flex items-start space-x-4">
-                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                          <Monitor className="w-6 h-6 text-gray-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-gray-900 flex items-center space-x-2">
-                            <span>{session.device}</span>
-                            {session.current && (
-                              <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                                Current Session
-                              </span>
-                            )}
-                            {session.trusted && (
-                              <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                                Trusted
-                              </span>
-                            )}
-                          </h4>
-                          <div className="text-sm text-gray-600 space-y-1">
-                            <div className="flex items-center space-x-4">
-                              <span>📍 {session.location}</span>
-                              <span>🌐 {session.ipAddress}</span>
-                            </div>
-                            <div className="flex items-center space-x-4">
-                              <span>🔐 Login: {new Date(session.loginTime).toLocaleString()}</span>
-                              <span>⚡ Last: {new Date(session.lastActivity).toLocaleString()}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {!session.current && (
-                        <button
-                          onClick={() => terminateSession(session.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <LogOut className="w-5 h-5" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="mt-6 flex justify-end">
-                  <button
-                    onClick={() => toast.success('All other sessions terminated')}
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                  >
-                    Terminate All Other Sessions
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {activeTab === 'permissions' && (
-            <motion.div
-              key="permissions"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              {/* Role-Based Access Control */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Role-Based Access Control</h3>
-                
-                <div className="space-y-6">
-                  {rolePermissions.map((role, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-900">{role.role}</h4>
-                          <p className="text-gray-600">{role.users.join(', ')}</p>
-                        </div>
-                        <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                          <Edit className="w-5 h-5" />
-                        </button>
-                      </div>
-                      
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="border-b border-gray-200">
-                              <th className="text-left py-2">Resource</th>
-                              <th className="text-center py-2">Read</th>
-                              <th className="text-center py-2">Write</th>
-                              <th className="text-center py-2">Delete</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {Object.entries(role.permissions).map(([resource, perms]) => (
-                              <tr key={resource} className="border-b border-gray-100">
-                                <td className="py-2 capitalize">{resource.replace(/([A-Z])/g, ' $1')}</td>
-                                <td className="text-center py-2">
-                                  {perms.read ? (
-                                    <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
-                                  ) : (
-                                    <XCircle className="w-5 h-5 text-red-500 mx-auto" />
-                                  )}
-                                </td>
-                                <td className="text-center py-2">
-                                  {perms.write ? (
-                                    <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
-                                  ) : (
-                                    <XCircle className="w-5 h-5 text-red-500 mx-auto" />
-                                  )}
-                                </td>
-                                <td className="text-center py-2">
-                                  {perms.delete ? (
-                                    <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
-                                  ) : (
-                                    <XCircle className="w-5 h-5 text-red-500 mx-auto" />
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {activeTab === 'audit' && (
-            <motion.div
-              key="audit"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              {/* Audit Settings */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Audit Configuration</h3>
-                
-                <div className="grid md:grid-cols-3 gap-6">
-                  <div className="space-y-4">
-                    <label className="flex items-center">
-                      <input type="checkbox" className="rounded border-gray-300 text-blue-600" defaultChecked />
-                      <span className="ml-2 text-sm text-gray-700">Log all data access</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input type="checkbox" className="rounded border-gray-300 text-blue-600" defaultChecked />
-                      <span className="ml-2 text-sm text-gray-700">Alert on suspicious activity</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input type="checkbox" className="rounded border-gray-300 text-blue-600" defaultChecked />
-                      <span className="ml-2 text-sm text-gray-700">Enable audit export</span>
-                    </label>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Log Retention (days)</label>
-                    <select className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                      <option value={30}>30 days</option>
-                      <option value={90}>90 days</option>
-                      <option value={180}>180 days</option>
-                      <option value={365}>1 year</option>
-                      <option value={2555}>7 years (HIPAA)</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Alert Threshold</label>
-                    <select className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                      <option value="low">Low sensitivity</option>
-                      <option value="medium">Medium sensitivity</option>
-                      <option value="high">High sensitivity</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Access Logs */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-semibold text-gray-900">Access Logs</h3>
-                  <div className="flex space-x-4">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <input
-                        type="text"
-                        placeholder="Search logs..."
-                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-                      <Filter className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3">Timestamp</th>
-                        <th className="text-left py-3">User</th>
-                        <th className="text-left py-3">Action</th>
-                        <th className="text-left py-3">Resource</th>
-                        <th className="text-left py-3">Location</th>
-                        <th className="text-center py-3">Status</th>
-                        <th className="text-center py-3">Risk</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {accessLogs.map(log => (
-                        <tr key={log.id} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="py-3 font-mono text-xs">{log.timestamp}</td>
-                          <td className="py-3">{log.user}</td>
-                          <td className="py-3">{log.action}</td>
-                          <td className="py-3 max-w-xs truncate" title={log.resource}>{log.resource}</td>
-                          <td className="py-3">
-                            <div className="text-xs text-gray-600">
-                              <div>{log.location}</div>
-                              <div>{log.ipAddress}</div>
-                            </div>
-                          </td>
-                          <td className="text-center py-3">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(log.status)}`}>
-                              {log.status}
-                            </span>
-                          </td>
-                          <td className="text-center py-3">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskColor(log.riskLevel)}`}>
-                              {log.riskLevel}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {activeTab === 'privacy' && (
-            <motion.div
-              key="privacy"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              {/* Data Anonymization */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Data Anonymization</h3>
-                
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-4">Automatic Anonymization</h4>
-                    <div className="space-y-4">
-                      <label className="flex items-center">
-                        <input type="checkbox" className="rounded border-gray-300 text-blue-600" defaultChecked />
-                        <span className="ml-2 text-sm text-gray-700">Enable auto-anonymization</span>
-                      </label>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">After (days)</label>
-                        <input
-                          type="number"
-                          defaultValue={2555}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      <label className="flex items-center">
-                        <input type="checkbox" className="rounded border-gray-300 text-blue-600" defaultChecked />
-                        <span className="ml-2 text-sm text-gray-700">Exclude active patients</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input type="checkbox" className="rounded border-gray-300 text-blue-600" defaultChecked />
-                        <span className="ml-2 text-sm text-gray-700">Retain clinical data</span>
-                      </label>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-4">Fields to Anonymize</h4>
-                    <div className="space-y-2">
-                      {['Name', 'Address', 'Phone', 'Email', 'SSN', 'Date of Birth', 'Photos'].map(field => (
-                        <label key={field} className="flex items-center">
-                          <input type="checkbox" className="rounded border-gray-300 text-blue-600" defaultChecked />
-                          <span className="ml-2 text-sm text-gray-700">{field}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Data Security */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Data Security Measures</h3>
-                
-                <div className="grid md:grid-cols-3 gap-6">
-                  <div className="text-center p-6 bg-green-50 rounded-lg">
-                    <ShieldCheck className="w-12 h-12 mx-auto text-green-500 mb-4" />
-                    <h4 className="font-semibold text-gray-900 mb-2">Encryption at Rest</h4>
-                    <p className="text-sm text-gray-600">AES-256 encryption for all stored data</p>
-                    <div className="mt-4">
-                      <span className="px-3 py-1 bg-green-100 text-green-800 text-xs rounded-full">Active</span>
-                    </div>
-                  </div>
-                  
-                  <div className="text-center p-6 bg-blue-50 rounded-lg">
-                    <Wifi className="w-12 h-12 mx-auto text-blue-500 mb-4" />
-                    <h4 className="font-semibold text-gray-900 mb-2">Encryption in Transit</h4>
-                    <p className="text-sm text-gray-600">TLS 1.3 for all data transmission</p>
-                    <div className="mt-4">
-                      <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">Active</span>
-                    </div>
-                  </div>
-                  
-                  <div className="text-center p-6 bg-purple-50 rounded-lg">
-                    <Database className="w-12 h-12 mx-auto text-purple-500 mb-4" />
-                    <h4 className="font-semibold text-gray-900 mb-2">Backup Security</h4>
-                    <p className="text-sm text-gray-600">Encrypted backups with key rotation</p>
-                    <div className="mt-4">
-                      <span className="px-3 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">Active</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Compliance Status */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Compliance Status</h3>
-                
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <CheckCircle className="w-6 h-6 text-green-500" />
-                        <span className="font-medium text-gray-900">HIPAA Compliance</span>
-                      </div>
-                      <span className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">Compliant</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <CheckCircle className="w-6 h-6 text-green-500" />
-                        <span className="font-medium text-gray-900">GDPR Compliance</span>
-                      </div>
-                      <span className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">Compliant</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <AlertTriangle className="w-6 h-6 text-blue-500" />
-                        <span className="font-medium text-gray-900">SOC 2 Audit</span>
-                      </div>
-                      <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">In Progress</span>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-4">Recent Audits</h4>
-                    <div className="space-y-3">
-                      <div className="p-3 border border-gray-200 rounded-lg">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h5 className="font-medium text-gray-900">HIPAA Security Assessment</h5>
-                            <p className="text-sm text-gray-600">Annual compliance review</p>
-                          </div>
-                          <span className="text-sm text-gray-500">2024-01-10</span>
-                        </div>
-                        <div className="mt-2">
-                          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Passed</span>
-                        </div>
-                      </div>
-                      
-                      <div className="p-3 border border-gray-200 rounded-lg">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h5 className="font-medium text-gray-900">Data Protection Impact Assessment</h5>
-                            <p className="text-sm text-gray-600">GDPR compliance check</p>
-                          </div>
-                          <span className="text-sm text-gray-500">2023-12-15</span>
-                        </div>
-                        <div className="mt-2">
-                          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Compliant</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
-};
-
-export default SecurityPrivacy;
+}

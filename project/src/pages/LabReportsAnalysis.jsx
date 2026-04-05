@@ -1,770 +1,331 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Upload,
-  FileText,
-  Image,
-  Download,
-  Share,
-  Eye,
-  EyeOff,
-  MousePointer,
-  Highlighter,
-  Type,
-  Circle,
-  Square,
-  ArrowRight,
-  Trash2,
-  ZoomIn,
-  ZoomOut,
-  RotateCw,
-  Save,
-  Search,
-  Filter,
-  Calendar,
-  User,
-  Activity,
-  Brain,
-  AlertTriangle,
-  CheckCircle,
-  X,
-  Plus,
-  Edit,
-  Archive,
-  Star,
-  Clock,
-  Database
-} from 'lucide-react';
+import { Upload, FileText, Search, Filter, Download, Eye, Trash2, ZoomIn, ZoomOut, RotateCw, Save, Share, AlertTriangle, CheckCircle, Clock, X, Plus, Star, Archive, Database, Activity } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
 import { useUser } from '../context/UserContext.jsx';
 
-const LabReportsAnalysis = () => {
+const SAMPLE_REPORTS = [
+  { id: 1, name: 'CBC_Report_Jan2024.pdf', type: 'Blood Work', date: '2024-01-15', patient: 'John Smith', status: 'analyzed', category: 'hematology', size: '245 KB', result: 'normal', summary: 'All values within normal range. Hemoglobin 14.2 g/dL, WBC 7.2K/µL.' },
+  { id: 2, name: 'Chest_Xray_Dec2023.jpg', type: 'Radiology', date: '2023-12-20', patient: 'Maria Garcia', status: 'analyzed', category: 'imaging', size: '1.2 MB', result: 'abnormal', summary: 'Mild cardiomegaly noted. No acute infiltrates. Follow-up recommended.' },
+  { id: 3, name: 'Lipid_Panel_Nov2023.pdf', type: 'Biochemistry', date: '2023-11-10', patient: 'Robert Chen', status: 'pending', category: 'biochemistry', size: '180 KB', result: 'pending', summary: 'Analysis in progress...' },
+];
+
+const ANALYSIS_TEMPLATES = {
+  'blood': {
+    title: 'Hematology Analysis',
+    parameters: [
+      { name: 'Hemoglobin', value: '14.2', unit: 'g/dL', normal: '12-17', status: 'normal' },
+      { name: 'WBC Count', value: '7.2', unit: 'K/µL', normal: '4-11', status: 'normal' },
+      { name: 'Platelets', value: '250', unit: 'K/µL', normal: '150-400', status: 'normal' },
+      { name: 'Hematocrit', value: '42', unit: '%', normal: '36-52', status: 'normal' },
+      { name: 'MCV', value: '88', unit: 'fL', normal: '80-100', status: 'normal' },
+      { name: 'Neutrophils', value: '68', unit: '%', normal: '50-70', status: 'normal' },
+    ],
+  },
+  'default': {
+    title: 'General Lab Analysis',
+    parameters: [
+      { name: 'Glucose (Fasting)', value: '95', unit: 'mg/dL', normal: '70-100', status: 'normal' },
+      { name: 'Total Cholesterol', value: '210', unit: 'mg/dL', normal: '<200', status: 'borderline' },
+      { name: 'LDL', value: '128', unit: 'mg/dL', normal: '<100', status: 'high' },
+      { name: 'HDL', value: '52', unit: 'mg/dL', normal: '>60', status: 'low' },
+      { name: 'Triglycerides', value: '145', unit: 'mg/dL', normal: '<150', status: 'normal' },
+      { name: 'Creatinine', value: '0.9', unit: 'mg/dL', normal: '0.7-1.3', status: 'normal' },
+    ],
+  },
+};
+
+const STATUS_COLORS = { normal: 'text-green-700 bg-green-50 border-green-200', high: 'text-red-700 bg-red-50 border-red-200', low: 'text-amber-700 bg-amber-50 border-amber-200', borderline: 'text-amber-700 bg-amber-50 border-amber-200' };
+
+export default function LabReportsAnalysis() {
   const { user, addMedicalRecord } = useUser();
-  const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [annotationMode, setAnnotationMode] = useState('view');
-  const [annotations, setAnnotations] = useState([]);
-  const [zoom, setZoom] = useState(1);
-  const [rotation, setRotation] = useState(0);
-  const [analysisResults, setAnalysisResults] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [showAnnotations, setShowAnnotations] = useState(true);
-  const [annotationText, setAnnotationText] = useState('');
-  const [currentAnnotation, setCurrentAnnotation] = useState(null);
-  const [savedReports, setSavedReports] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [files, setFiles] = useState(SAMPLE_REPORTS);
+  const [selected, setSelected] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysis, setAnalysis] = useState(null);
+  const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('all');
-  const [selectedDate, setSelectedDate] = useState('');
+  const [tab, setTab] = useState('reports');
+  const [zoom, setZoom] = useState(1);
 
-  const canvasRef = useRef(null);
-  const imageRef = useRef(null);
-  const fileInputRef = useRef(null);
-
-  const onDrop = useCallback((acceptedFiles) => {
-    const newFiles = acceptedFiles.map(file => ({
+  const onDrop = useCallback(accepted => {
+    const newFiles = accepted.map(file => ({
       id: Date.now() + Math.random(),
-      file,
       name: file.name,
-      size: file.size,
-      type: file.type,
+      type: file.type.includes('image') ? 'Radiology' : 'Lab Report',
+      date: new Date().toLocaleDateString(),
+      patient: user?.name || 'Current Patient',
+      status: 'pending',
+      category: file.name.toLowerCase().includes('blood') || file.name.toLowerCase().includes('cbc') ? 'hematology' : 'general',
+      size: (file.size / 1024).toFixed(0) + ' KB',
+      result: 'pending',
+      summary: 'Awaiting analysis',
       url: URL.createObjectURL(file),
-      uploadedAt: new Date().toISOString(),
-      annotations: [],
-      analysis: null,
-      category: determineCategory(file.name),
-      patient: user?.name || 'Unknown Patient'
     }));
-
-    setUploadedFiles(prev => [...prev, ...newFiles]);
-    toast.success(`${acceptedFiles.length} file(s) uploaded successfully`);
+    setFiles(prev => [...newFiles, ...prev]);
+    toast.success(`${accepted.length} file(s) uploaded`);
   }, [user]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff'],
-      'application/pdf': ['.pdf'],
-      'text/*': ['.txt', '.csv']
-    },
-    maxSize: 50 * 1024 * 1024 // 50MB
+    accept: { 'image/*': [], 'application/pdf': [] },
+    maxSize: 20 * 1024 * 1024,
   });
 
-  const determineCategory = (filename) => {
-    const name = filename.toLowerCase();
-    if (name.includes('blood') || name.includes('cbc') || name.includes('hematology')) return 'Blood Test';
-    if (name.includes('xray') || name.includes('x-ray') || name.includes('radiograph')) return 'X-Ray';
-    if (name.includes('ct') || name.includes('scan')) return 'CT Scan';
-    if (name.includes('mri')) return 'MRI';
-    if (name.includes('ultrasound') || name.includes('echo')) return 'Ultrasound';
-    if (name.includes('urine')) return 'Urine Test';
-    if (name.includes('biopsy')) return 'Biopsy';
-    if (name.includes('pathology')) return 'Pathology';
-    return 'Other';
+  const analyze = async (file) => {
+    setSelected(file);
+    setAnalyzing(true);
+    setAnalysis(null);
+    await new Promise(r => setTimeout(r, 2000));
+    const template = file.category === 'hematology' ? ANALYSIS_TEMPLATES['blood'] : ANALYSIS_TEMPLATES['default'];
+    setAnalysis({ ...template, analyzedAt: new Date().toISOString(), confidence: 94, fileId: file.id });
+    setFiles(prev => prev.map(f => f.id === file.id ? { ...f, status: 'analyzed' } : f));
+    setAnalyzing(false);
+    setTab('analysis');
+    toast.success('Analysis complete');
+    addMedicalRecord({ type: 'lab_report', fileName: file.name, analysis: template });
   };
 
-  const analyzeReport = async (file) => {
-    setIsAnalyzing(true);
-    setSelectedFile(file);
-
-    try {
-      // Simulate AI analysis
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      const mockAnalysis = generateMockAnalysis(file);
-      
-      // Update file with analysis
-      setUploadedFiles(prev => prev.map(f => 
-        f.id === file.id ? { ...f, analysis: mockAnalysis } : f
-      ));
-      
-      setAnalysisResults(mockAnalysis);
-      
-      // Save to medical records
-      addMedicalRecord({
-        type: 'lab_analysis',
-        fileName: file.name,
-        category: file.category,
-        analysis: mockAnalysis,
-        timestamp: new Date().toISOString()
-      });
-
-      toast.success('Report analysis completed successfully');
-    } catch (error) {
-      toast.error('Analysis failed. Please try again.');
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const generateMockAnalysis = (file) => {
-    const category = file.category;
-    
-    const analysisTemplates = {
-      'Blood Test': {
-        type: 'Blood Test Analysis',
-        findings: [
-          { parameter: 'Hemoglobin', value: '11.2 g/dL', normalRange: '12-15 g/dL', status: 'low', severity: 'mild' },
-          { parameter: 'WBC Count', value: '12,500/μL', normalRange: '4,000-11,000/μL', status: 'high', severity: 'moderate' },
-          { parameter: 'Platelet Count', value: '250,000/μL', normalRange: '150,000-450,000/μL', status: 'normal', severity: 'none' },
-          { parameter: 'Blood Glucose', value: '140 mg/dL', normalRange: '70-100 mg/dL', status: 'high', severity: 'mild' }
-        ],
-        summary: 'Mild anemia with elevated white blood cell count suggesting possible infection. Blood glucose levels are elevated.',
-        recommendations: [
-          'Consult hematologist for anemia evaluation',
-          'Consider iron supplementation',
-          'Monitor blood glucose levels',
-          'Follow up in 2 weeks',
-          'Investigate source of infection'
-        ],
-        criticalValues: ['WBC Count elevated', 'Hemoglobin low'],
-        confidence: 92
-      },
-      'X-Ray': {
-        type: 'X-Ray Analysis',
-        findings: [
-          { parameter: 'Lung Fields', value: 'Clear bilateral lung fields', normalRange: 'Clear', status: 'normal', severity: 'none' },
-          { parameter: 'Heart Size', value: 'Normal cardiac silhouette', normalRange: 'Normal', status: 'normal', severity: 'none' },
-          { parameter: 'Bone Structure', value: 'Intact rib cage and spine', normalRange: 'Intact', status: 'normal', severity: 'none' },
-          { parameter: 'Soft Tissues', value: 'No obvious abnormalities', normalRange: 'Normal', status: 'normal', severity: 'none' }
-        ],
-        summary: 'Normal chest X-ray with no acute cardiopulmonary abnormalities detected.',
-        recommendations: [
-          'No immediate treatment required',
-          'Continue regular health monitoring',
-          'Maintain healthy lifestyle',
-          'Routine follow-up as scheduled'
-        ],
-        criticalValues: [],
-        confidence: 95
-      },
-      'CT Scan': {
-        type: 'CT Scan Analysis',
-        findings: [
-          { parameter: 'Brain Parenchyma', value: 'No acute hemorrhage or mass', normalRange: 'Normal', status: 'normal', severity: 'none' },
-          { parameter: 'Ventricles', value: 'Normal size and configuration', normalRange: 'Normal', status: 'normal', severity: 'none' },
-          { parameter: 'Skull', value: 'Intact calvarium', normalRange: 'Intact', status: 'normal', severity: 'none' }
-        ],
-        summary: 'Normal head CT scan with no evidence of acute intracranial pathology.',
-        recommendations: [
-          'No immediate intervention required',
-          'Correlate with clinical symptoms',
-          'Follow up if symptoms persist'
-        ],
-        criticalValues: [],
-        confidence: 98
-      }
-    };
-
-    return analysisTemplates[category] || analysisTemplates['Blood Test'];
-  };
-
-  const addAnnotation = (event) => {
-    if (annotationMode === 'view' || !selectedFile) return;
-
-    const rect = imageRef.current.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 100;
-    const y = ((event.clientY - rect.top) / rect.height) * 100;
-
-    const annotation = {
-      id: Date.now(),
-      type: annotationMode,
-      x,
-      y,
-      text: annotationText || 'Annotation',
-      timestamp: new Date().toISOString(),
-      author: user?.name || 'Doctor'
-    };
-
-    const newAnnotations = [...annotations, annotation];
-    setAnnotations(newAnnotations);
-
-    // Update file annotations
-    setUploadedFiles(prev => prev.map(file => 
-      file.id === selectedFile.id 
-        ? { ...file, annotations: newAnnotations }
-        : file
-    ));
-
-    setAnnotationText('');
-    toast.success('Annotation added successfully');
-  };
-
-  const removeAnnotation = (annotationId) => {
-    const newAnnotations = annotations.filter(a => a.id !== annotationId);
-    setAnnotations(newAnnotations);
-
-    if (selectedFile) {
-      setUploadedFiles(prev => prev.map(file => 
-        file.id === selectedFile.id 
-          ? { ...file, annotations: newAnnotations }
-          : file
-      ));
-    }
-  };
-
-  const selectFile = (file) => {
-    setSelectedFile(file);
-    setAnnotations(file.annotations || []);
-    setAnalysisResults(file.analysis);
-    setZoom(1);
-    setRotation(0);
-    setAnnotationMode('view');
-  };
-
-  const deleteFile = (fileId) => {
-    setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
-    if (selectedFile?.id === fileId) {
-      setSelectedFile(null);
-      setAnnotations([]);
-      setAnalysisResults(null);
-    }
-    toast.success('File deleted successfully');
-  };
-
-  const saveReport = () => {
-    if (!selectedFile) return;
-
-    const reportData = {
-      id: selectedFile.id,
-      file: selectedFile,
-      annotations,
-      analysis: analysisResults,
-      savedAt: new Date().toISOString(),
-      patient: user?.name || 'Unknown'
-    };
-
-    setSavedReports(prev => [...prev, reportData]);
-    localStorage.setItem('savedReports', JSON.stringify([...savedReports, reportData]));
-    
-    addMedicalRecord({
-      type: 'saved_report',
-      data: reportData,
-      timestamp: new Date().toISOString()
-    });
-
-    toast.success('Report saved successfully');
-  };
-
-  const exportReport = () => {
-    if (!selectedFile) return;
-    
-    const reportData = {
-      fileName: selectedFile.name,
-      patient: user?.name,
-      analysisDate: new Date().toLocaleDateString(),
-      analysis: analysisResults,
-      annotations: annotations
-    };
-
-    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${selectedFile.name}_analysis.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    
-    toast.success('Report exported successfully');
-  };
-
-  const filteredFiles = uploadedFiles.filter(file => {
-    const matchesSearch = file.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         file.category.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = filterType === 'all' || file.category === filterType;
-    const matchesDate = !selectedDate || file.uploadedAt.includes(selectedDate);
-    
-    return matchesSearch && matchesType && matchesDate;
+  const filtered = files.filter(f => {
+    const matchSearch = f.name.toLowerCase().includes(search.toLowerCase()) || f.patient.toLowerCase().includes(search.toLowerCase());
+    const matchType = filterType === 'all' || f.type.toLowerCase().includes(filterType.toLowerCase()) || f.status === filterType;
+    return matchSearch && matchType;
   });
 
-  const getFileIcon = (type) => {
-    if (type.startsWith('image/')) return <Image className="w-5 h-5" />;
-    if (type.includes('pdf')) return <FileText className="w-5 h-5" />;
-    return <FileText className="w-5 h-5" />;
-  };
-
-  const formatFileSize = (bytes) => {
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    if (bytes === 0) return '0 Bytes';
-    const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
-  };
+  const tabs = [
+    { id: 'upload', label: 'Upload' },
+    { id: 'reports', label: 'Reports', count: files.length },
+    { id: 'analysis', label: 'Analysis', disabled: !analysis },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 pt-24 pb-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <div className="flex items-center justify-center space-x-3 mb-6">
-            <div className="w-16 h-16 bg-gradient-to-r from-green-600 to-blue-600 rounded-3xl flex items-center justify-center shadow-xl">
-              <Image className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900">Lab Reports & Scan Analysis</h1>
-              <p className="text-xl text-gray-600">AI-Powered Medical Report Analysis</p>
-            </div>
-          </div>
-        </motion.div>
-
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left Panel - File Management */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* File Upload */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Upload Reports</h2>
-              
-              <div
-                {...getRootProps()}
-                className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-300 ${
-                  isDragActive 
-                    ? 'border-blue-500 bg-blue-50' 
-                    : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
-                }`}
-              >
-                <input {...getInputProps()} />
-                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                {isDragActive ? (
-                  <p className="text-blue-600 font-medium">Drop the files here...</p>
-                ) : (
-                  <div>
-                    <p className="text-gray-600 mb-2">
-                      Drag & drop your medical reports here, or click to select
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Supports: PDF, JPG, PNG, TIFF (Max 50MB)
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-4 text-sm text-gray-500">
-                <p className="font-medium mb-2">Supported Report Types:</p>
-                <ul className="space-y-1">
-                  <li>• Blood Test Reports (CBC, LFT, KFT)</li>
-                  <li>• X-Ray and CT Scans</li>
-                  <li>• MRI and Ultrasound Images</li>
-                  <li>• Pathology Reports</li>
-                  <li>• Urine and Other Lab Tests</li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Search and Filter */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Search & Filter</h3>
-              
-              <div className="space-y-4">
-                <div className="relative">
-                  <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search reports..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                
-                <select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All Categories</option>
-                  <option value="Blood Test">Blood Tests</option>
-                  <option value="X-Ray">X-Rays</option>
-                  <option value="CT Scan">CT Scans</option>
-                  <option value="MRI">MRI</option>
-                  <option value="Ultrasound">Ultrasound</option>
-                  <option value="Urine Test">Urine Tests</option>
-                  <option value="Other">Other</option>
-                </select>
-                
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            {/* Uploaded Files List */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">
-                Uploaded Files ({filteredFiles.length})
-              </h3>
-              
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {filteredFiles.map((file) => (
-                  <div
-                    key={file.id}
-                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                      selectedFile?.id === file.id
-                        ? 'border-blue-300 bg-blue-50'
-                        : 'border-gray-200 hover:bg-gray-50'
-                    }`}
-                    onClick={() => selectFile(file)}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-3">
-                        <div className="p-2 bg-gray-100 rounded-lg">
-                          {getFileIcon(file.type)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 truncate">{file.name}</h4>
-                          <p className="text-sm text-gray-500">{file.category}</p>
-                          <div className="flex items-center space-x-2 text-xs text-gray-400">
-                            <span>{formatFileSize(file.size)}</span>
-                            <span>•</span>
-                            <span>{new Date(file.uploadedAt).toLocaleDateString()}</span>
-                          </div>
-                          {file.analysis && (
-                            <div className="flex items-center space-x-1 mt-1">
-                              <CheckCircle className="w-3 h-3 text-green-500" />
-                              <span className="text-xs text-green-600">Analyzed</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="flex space-x-1">
-                        {!file.analysis && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              analyzeReport(file);
-                            }}
-                            disabled={isAnalyzing}
-                            className="p-1 text-blue-600 hover:bg-blue-100 rounded text-xs"
-                          >
-                            <Brain className="w-3 h-3" />
-                          </button>
-                        )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteFile(file.id);
-                          }}
-                          className="p-1 text-red-600 hover:bg-red-100 rounded text-xs"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Center Panel - Image Viewer */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg p-6 h-full">
-              {selectedFile ? (
-                <div className="space-y-4">
-                  {/* Toolbar */}
-                  <div className="flex items-center justify-between border-b pb-4">
-                    <h3 className="font-semibold text-gray-900">{selectedFile.name}</h3>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => setZoom(prev => Math.min(prev + 0.25, 3))}
-                        className="p-2 text-gray-600 hover:bg-gray-100 rounded"
-                      >
-                        <ZoomIn className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setZoom(prev => Math.max(prev - 0.25, 0.25))}
-                        className="p-2 text-gray-600 hover:bg-gray-100 rounded"
-                      >
-                        <ZoomOut className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setRotation(prev => (prev + 90) % 360)}
-                        className="p-2 text-gray-600 hover:bg-gray-100 rounded"
-                      >
-                        <RotateCw className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setShowAnnotations(!showAnnotations)}
-                        className={`p-2 rounded ${showAnnotations ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}
-                      >
-                        {showAnnotations ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Annotation Tools */}
-                  <div className="flex items-center space-x-2 pb-4 border-b">
-                    <button
-                      onClick={() => setAnnotationMode('view')}
-                      className={`px-3 py-1 rounded text-sm ${annotationMode === 'view' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}
-                    >
-                      <MousePointer className="w-4 h-4 inline mr-1" />
-                      View
-                    </button>
-                    <button
-                      onClick={() => setAnnotationMode('point')}
-                      className={`px-3 py-1 rounded text-sm ${annotationMode === 'point' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}
-                    >
-                      <Circle className="w-4 h-4 inline mr-1" />
-                      Point
-                    </button>
-                    <button
-                      onClick={() => setAnnotationMode('highlight')}
-                      className={`px-3 py-1 rounded text-sm ${annotationMode === 'highlight' ? 'bg-blue-100 text-blue-600' : 'text-gray-600 hover:bg-gray-100'}`}
-                    >
-                      <Highlighter className="w-4 h-4 inline mr-1" />
-                      Highlight
-                    </button>
-                    {annotationMode !== 'view' && (
-                      <input
-                        type="text"
-                        placeholder="Annotation text..."
-                        value={annotationText}
-                        onChange={(e) => setAnnotationText(e.target.value)}
-                        className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded"
-                      />
-                    )}
-                  </div>
-
-                  {/* Image Display */}
-                  <div className="relative overflow-hidden rounded-lg border border-gray-200 aspect-square">
-                    {selectedFile.type.startsWith('image/') ? (
-                      <div
-                        className="relative w-full h-full cursor-crosshair"
-                        onClick={addAnnotation}
-                      >
-                        <img
-                          ref={imageRef}
-                          src={selectedFile.url}
-                          alt={selectedFile.name}
-                          className="w-full h-full object-contain"
-                          style={{
-                            transform: `scale(${zoom}) rotate(${rotation}deg)`,
-                            transition: 'transform 0.2s ease'
-                          }}
-                        />
-                        
-                        {/* Annotations Overlay */}
-                        {showAnnotations && annotations.map((annotation) => (
-                          <div
-                            key={annotation.id}
-                            className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group"
-                            style={{
-                              left: `${annotation.x}%`,
-                              top: `${annotation.y}%`
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <div className="w-4 h-4 bg-red-500 border-2 border-white rounded-full shadow-lg animate-pulse" />
-                            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                              {annotation.text}
-                              <button
-                                onClick={() => removeAnnotation(annotation.id)}
-                                className="ml-2 text-red-300 hover:text-red-100"
-                              >
-                                <X className="w-3 h-3 inline" />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-gray-500">
-                        <div className="text-center">
-                          <FileText className="w-16 h-16 mx-auto mb-4" />
-                          <p>PDF preview not available</p>
-                          <p className="text-sm">Click analyze to process this file</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex space-x-2">
-                    {!selectedFile.analysis && (
-                      <button
-                        onClick={() => analyzeReport(selectedFile)}
-                        disabled={isAnalyzing}
-                        className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors flex items-center justify-center space-x-2"
-                      >
-                        {isAnalyzing ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            <span>Analyzing...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Brain className="w-4 h-4" />
-                            <span>Analyze</span>
-                          </>
-                        )}
-                      </button>
-                    )}
-                    <button
-                      onClick={saveReport}
-                      className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors flex items-center space-x-2"
-                    >
-                      <Save className="w-4 h-4" />
-                      <span>Save</span>
-                    </button>
-                    <button
-                      onClick={exportReport}
-                      className="bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600 transition-colors flex items-center space-x-2"
-                    >
-                      <Download className="w-4 h-4" />
-                      <span>Export</span>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                  <div className="text-center">
-                    <Image className="w-16 h-16 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No File Selected</h3>
-                    <p>Upload and select a file to view and analyze</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Panel - Analysis Results */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg p-6 h-full">
-              {analysisResults ? (
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-semibold text-gray-900">Analysis Results</h3>
-                    <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                      {analysisResults.confidence}% Confidence
-                    </span>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-2">Report Type</h4>
-                      <p className="text-blue-600 font-medium">{analysisResults.type}</p>
-                    </div>
-
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-3">Key Findings</h4>
-                      <div className="space-y-3">
-                        {analysisResults.findings.map((finding, index) => (
-                          <div key={index} className="p-3 border border-gray-200 rounded-lg">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-medium text-gray-900">{finding.parameter}</span>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                finding.status === 'normal' ? 'bg-green-100 text-green-800' :
-                                finding.status === 'high' ? 'bg-red-100 text-red-800' :
-                                'bg-yellow-100 text-yellow-800'
-                              }`}>
-                                {finding.status.toUpperCase()}
-                              </span>
-                            </div>
-                            <div className="text-sm text-gray-600">
-                              <p>Value: <span className="font-medium">{finding.value}</span></p>
-                              <p>Normal Range: <span className="font-medium">{finding.normalRange}</span></p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-2">Summary</h4>
-                      <p className="text-gray-700 bg-blue-50 p-3 rounded-lg">{analysisResults.summary}</p>
-                    </div>
-
-                    {analysisResults.criticalValues.length > 0 && (
-                      <div>
-                        <h4 className="font-medium text-red-800 mb-2 flex items-center">
-                          <AlertTriangle className="w-4 h-4 mr-2" />
-                          Critical Values
-                        </h4>
-                        <div className="space-y-1">
-                          {analysisResults.criticalValues.map((value, index) => (
-                            <div key={index} className="text-red-700 bg-red-50 p-2 rounded text-sm">
-                              • {value}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-3">Recommendations</h4>
-                      <ul className="space-y-2">
-                        {analysisResults.recommendations.map((rec, index) => (
-                          <li key={index} className="flex items-start space-x-2">
-                            <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                            <span className="text-gray-700 text-sm">{rec}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                  <div className="text-center">
-                    <Brain className="w-16 h-16 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Analysis Available</h3>
-                    <p>Select a file and click "Analyze" to see AI-powered insights</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="section-label">Diagnostics</span>
+          <span className="text-[#CBD5E1] text-xs">·</span>
+          <span className="section-label">Lab Reports</span>
         </div>
+        <h1 className="font-display text-3xl font-bold text-[#0F172A]">Lab Reports & Analysis</h1>
+        <p className="text-[#64748B] mt-1 text-sm">Upload, view, and AI-analyze diagnostic reports and imaging</p>
       </div>
+
+      <div className="flex border-b border-[#E2E8F0] mb-6">
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => !t.disabled && setTab(t.id)} disabled={t.disabled}
+            className={`flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              tab === t.id ? 'border-[#1E40AF] text-[#1E40AF]' : 'border-transparent text-[#64748B] hover:text-[#0F172A]'
+            } ${t.disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}>
+            {t.label}
+            {t.count !== undefined && <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#F1F5F9] text-[#64748B]">{t.count}</span>}
+          </button>
+        ))}
+      </div>
+
+      <AnimatePresence mode="wait">
+        {/* UPLOAD TAB */}
+        {tab === 'upload' && (
+          <motion.div key="upload" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <div {...getRootProps()} className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-colors ${isDragActive ? 'border-[#1E40AF] bg-[#EFF6FF]' : 'border-[#CBD5E1] hover:border-[#1E40AF] hover:bg-[#F8FAFF]'}`}>
+              <input {...getInputProps()} />
+              <Upload className={`w-10 h-10 mx-auto mb-4 ${isDragActive ? 'text-[#1E40AF]' : 'text-[#94A3B8]'}`} />
+              <h3 className="font-semibold text-[#0F172A] mb-2">{isDragActive ? 'Drop files here' : 'Upload Lab Reports'}</h3>
+              <p className="text-sm text-[#64748B] mb-4">Drag & drop or click to upload PDF, JPEG, PNG files<br/>Max file size: 20MB</p>
+              <button className="btn-primary">Browse Files</button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+              {[
+                { icon: FileText, title: 'Blood Work', desc: 'CBC, metabolic panels, lipids', color: 'bg-blue-50 text-[#1E40AF]' },
+                { icon: Activity, title: 'Imaging Reports', desc: 'X-ray, MRI, CT, ultrasound', color: 'bg-purple-50 text-purple-600' },
+                { icon: Database, title: 'Pathology', desc: 'Biopsy, culture, cytology', color: 'bg-green-50 text-green-600' },
+              ].map((item, i) => (
+                <div key={i} className="card text-center">
+                  <div className={`w-10 h-10 rounded-xl ${item.color} flex items-center justify-center mx-auto mb-3`}>
+                    <item.icon className="w-5 h-5" />
+                  </div>
+                  <div className="font-medium text-[#0F172A] text-sm">{item.title}</div>
+                  <div className="text-xs text-[#64748B] mt-1">{item.desc}</div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* REPORTS TAB */}
+        {tab === 'reports' && (
+          <motion.div key="reports" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <div className="flex gap-3 mb-4 flex-wrap">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+                <input className="input pl-9" placeholder="Search reports..." value={search} onChange={e => setSearch(e.target.value)} />
+              </div>
+              <select className="input w-auto" value={filterType} onChange={e => setFilterType(e.target.value)}>
+                <option value="all">All Types</option>
+                <option value="Blood">Blood Work</option>
+                <option value="Radiology">Radiology</option>
+                <option value="Biochemistry">Biochemistry</option>
+                <option value="analyzed">Analyzed</option>
+                <option value="pending">Pending</option>
+              </select>
+              <button onClick={() => setTab('upload')} className="btn-secondary flex items-center gap-2">
+                <Upload className="w-4 h-4" />Upload
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {filtered.map(file => (
+                <div key={file.id} className={`card hover:border-[#1E40AF] transition-colors cursor-pointer ${selected?.id === file.id ? 'border-[#1E40AF]' : ''}`}
+                  onClick={() => setSelected(file)}>
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      file.type === 'Radiology' ? 'bg-purple-100' : file.type === 'Blood Work' ? 'bg-blue-100' : 'bg-green-100'
+                    }`}>
+                      <FileText className={`w-5 h-5 ${file.type === 'Radiology' ? 'text-purple-600' : file.type === 'Blood Work' ? 'text-[#1E40AF]' : 'text-green-600'}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-[#0F172A] text-sm truncate">{file.name}</span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${
+                          file.result === 'normal' ? 'bg-green-50 text-green-700 border-green-200' :
+                          file.result === 'abnormal' ? 'bg-red-50 text-red-700 border-red-200' :
+                          'bg-gray-50 text-gray-600 border-gray-200'
+                        }`}>{file.result}</span>
+                      </div>
+                      <div className="flex items-center gap-4 mt-1">
+                        <span className="text-xs text-[#94A3B8]">{file.patient}</span>
+                        <span className="text-xs text-[#94A3B8]">{file.date}</span>
+                        <span className="text-xs text-[#94A3B8]">{file.size}</span>
+                        <span className="text-xs text-[#94A3B8]">{file.type}</span>
+                      </div>
+                      {file.summary && file.status === 'analyzed' && (
+                        <p className="text-xs text-[#64748B] mt-1 truncate">{file.summary}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs px-2 py-0.5 rounded-md font-medium ${file.status === 'analyzed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{file.status}</span>
+                      <button onClick={e => { e.stopPropagation(); analyze(file); }} className="btn-primary text-xs py-1.5 px-3">
+                        {analyzing && selected?.id === file.id ? 'Analyzing...' : file.status === 'analyzed' ? 'Re-analyze' : 'Analyze'}
+                      </button>
+                      <button onClick={e => { e.stopPropagation(); toast.info('Downloading...'); }} className="p-1.5 text-[#64748B] hover:text-[#1E40AF] border border-[#E2E8F0] rounded-lg">
+                        <Download className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={e => { e.stopPropagation(); setFiles(prev => prev.filter(f => f.id !== file.id)); if (selected?.id === file.id) setSelected(null); }} className="p-1.5 text-[#64748B] hover:text-red-500 border border-[#E2E8F0] rounded-lg">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {filtered.length === 0 && (
+                <div className="card text-center py-12">
+                  <FileText className="w-10 h-10 text-[#94A3B8] mx-auto mb-3" />
+                  <p className="text-[#64748B] font-medium">No reports found</p>
+                  <button onClick={() => setTab('upload')} className="btn-secondary mt-4 text-sm">Upload a Report</button>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* ANALYSIS TAB */}
+        {tab === 'analysis' && analysis && (
+          <motion.div key="analysis" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg">
+                  <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+                  <span className="text-xs font-medium text-green-700">Analysis Complete · {analysis.confidence}% confidence</span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => toast.info('Downloading report...')} className="btn-secondary flex items-center gap-2"><Download className="w-4 h-4" />Download</button>
+                <button onClick={() => toast.info('Sharing report...')} className="btn-secondary flex items-center gap-2"><Share className="w-4 h-4" />Share</button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <div className="card">
+                  <h2 className="font-semibold text-[#0F172A] mb-4">{analysis.title}</h2>
+                  <div className="space-y-3">
+                    {analysis.parameters.map((param, i) => {
+                      const statusCls = STATUS_COLORS[param.status] || 'text-gray-700 bg-gray-50 border-gray-200';
+                      return (
+                        <div key={i} className="flex items-center justify-between p-3 border border-[#E2E8F0] rounded-lg">
+                          <div>
+                            <div className="font-medium text-[#0F172A] text-sm">{param.name}</div>
+                            <div className="text-xs text-[#94A3B8]">Normal: {param.normal} {param.unit}</div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="text-right">
+                              <div className="font-bold text-[#0F172A]">{param.value}</div>
+                              <div className="text-xs text-[#64748B]">{param.unit}</div>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded border text-xs font-medium capitalize ${statusCls}`}>{param.status}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="card">
+                  <h2 className="font-semibold text-[#0F172A] mb-3">Summary</h2>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full" />
+                      <span className="text-xs text-[#374151]">{analysis.parameters.filter(p => p.status === 'normal').length} values normal</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full" />
+                      <span className="text-xs text-[#374151]">{analysis.parameters.filter(p => p.status === 'borderline' || p.status === 'low').length} values borderline</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-red-500 rounded-full" />
+                      <span className="text-xs text-[#374151]">{analysis.parameters.filter(p => p.status === 'high').length} values elevated</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card bg-blue-50 border-blue-200">
+                  <div className="section-label text-blue-600 mb-2">Recommendations</div>
+                  <ul className="space-y-1">
+                    {analysis.parameters.filter(p => p.status !== 'normal').length > 0 ? (
+                      <>
+                        <li className="text-xs text-blue-800">• Follow up on abnormal values within 2 weeks</li>
+                        <li className="text-xs text-blue-800">• Consider dietary modifications for lipid values</li>
+                        <li className="text-xs text-blue-800">• Recheck lipid panel in 3 months</li>
+                      </>
+                    ) : (
+                      <li className="text-xs text-blue-800">• All values within normal range — routine follow-up</li>
+                    )}
+                  </ul>
+                </div>
+
+                <div className="card">
+                  <div className="text-xs text-[#64748B]">Analyzed: {new Date(analysis.analyzedAt).toLocaleString()}</div>
+                  {selected && <div className="text-xs text-[#64748B] mt-1">File: {selected.name}</div>}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Loading overlay */}
+        {analyzing && tab !== 'analysis' && (
+          <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-8 shadow-xl text-center">
+              <div className="w-10 h-10 border-4 border-[#1E40AF] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <div className="font-semibold text-[#0F172A]">Analyzing Report</div>
+              <div className="text-sm text-[#64748B] mt-1">AI processing your lab report...</div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
-};
-
-export default LabReportsAnalysis;
+}

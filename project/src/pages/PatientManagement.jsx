@@ -1,918 +1,279 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Users, 
-  Clock, 
-  Calendar, 
-  Search, 
-  Filter, 
-  UserPlus, 
-  Phone, 
-  Video, 
-  MessageSquare, 
-  Star, 
-  AlertTriangle, 
-  CheckCircle, 
-  XCircle, 
-  Eye, 
-  Edit, 
-  MoreVertical, 
-  MapPin, 
-  Mail, 
-  User, 
-  Heart, 
-  Activity, 
-  Pill, 
-  FileText, 
-  Camera, 
-  Shield, 
-  Zap, 
-  Target, 
-  Plus, 
-  Minus, 
-  ChevronDown, 
-  ChevronUp, 
-  Bell, 
-  Flag,
-  ThumbsUp,
-  ThumbsDown,
-  RefreshCw,
-  Download,
-  Share,
-  Settings,
-  History,
-  Bookmark,
-  Archive,
-  Trash2
-} from 'lucide-react';
+import { Users, Clock, Calendar, Search, Filter, UserPlus, Phone, Video, MessageSquare, Star, AlertTriangle, CheckCircle, Eye, Edit, MoreVertical, MapPin, Mail, User, Heart, Activity, Pill, FileText, Shield, Plus, ChevronDown, X, Badge } from 'lucide-react';
 import { toast } from 'react-toastify';
 
-const PatientManagement = () => {
+const INITIAL_PATIENTS = [
+  { id: 1, name: 'John Smith', age: 45, gender: 'M', photo: 'https://i.pravatar.cc/100?img=1', appointmentTime: '09:00 AM', priority: 'urgent', chiefComplaint: 'Chest pain and shortness of breath', waitingTime: 15, status: 'waiting', type: 'video', lastVisit: '2024-01-10', contact: '+1 (555) 123-4567', email: 'john.smith@email.com', bloodType: 'O+', allergies: ['Penicillin'], conditions: ['Hypertension', 'Diabetes'], vitals: { bp: '145/92', hr: 88, temp: '98.6', o2: 96 } },
+  { id: 2, name: 'Maria Garcia', age: 32, gender: 'F', photo: 'https://i.pravatar.cc/100?img=5', appointmentTime: '09:30 AM', priority: 'normal', chiefComplaint: 'Routine checkup and flu symptoms', waitingTime: 5, status: 'in-progress', type: 'in-person', lastVisit: '2023-11-15', contact: '+1 (555) 234-5678', email: 'maria.garcia@email.com', bloodType: 'A+', allergies: [], conditions: ['Asthma'], vitals: { bp: '118/76', hr: 72, temp: '99.1', o2: 99 } },
+  { id: 3, name: 'Robert Chen', age: 58, gender: 'M', photo: 'https://i.pravatar.cc/100?img=3', appointmentTime: '10:00 AM', priority: 'critical', chiefComplaint: 'Severe abdominal pain, vomiting', waitingTime: 2, status: 'waiting', type: 'walk-in', lastVisit: null, contact: '+1 (555) 345-6789', email: 'r.chen@email.com', bloodType: 'B-', allergies: ['Aspirin', 'Sulfa'], conditions: [], vitals: { bp: '160/100', hr: 110, temp: '101.2', o2: 97 } },
+  { id: 4, name: 'Sarah Johnson', age: 28, gender: 'F', photo: 'https://i.pravatar.cc/100?img=9', appointmentTime: '10:30 AM', priority: 'normal', chiefComplaint: 'Follow-up for diabetes management', waitingTime: 22, status: 'waiting', type: 'video', lastVisit: '2024-01-05', contact: '+1 (555) 456-7890', email: 's.johnson@email.com', bloodType: 'AB+', allergies: ['Latex'], conditions: ['Type 2 Diabetes'], vitals: { bp: '122/80', hr: 76, temp: '98.4', o2: 98 } },
+  { id: 5, name: 'Michael Brown', age: 65, gender: 'M', photo: 'https://i.pravatar.cc/100?img=7', appointmentTime: '11:00 AM', priority: 'urgent', chiefComplaint: 'Dizziness and vision changes', waitingTime: 8, status: 'waiting', type: 'in-person', lastVisit: '2023-12-20', contact: '+1 (555) 567-8901', email: 'm.brown@email.com', bloodType: 'O-', allergies: [], conditions: ['Hypertension', 'Glaucoma'], vitals: { bp: '178/105', hr: 82, temp: '98.2', o2: 95 } },
+];
+
+const PRIORITY_CONFIG = {
+  critical: { label: 'Critical', cls: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-500' },
+  urgent: { label: 'Urgent', cls: 'bg-amber-100 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
+  normal: { label: 'Normal', cls: 'bg-green-100 text-green-700 border-green-200', dot: 'bg-green-500' },
+};
+
+const STATUS_CONFIG = {
+  waiting: { label: 'Waiting', cls: 'bg-blue-100 text-blue-700' },
+  'in-progress': { label: 'In Progress', cls: 'bg-amber-100 text-amber-700' },
+  completed: { label: 'Completed', cls: 'bg-green-100 text-green-700' },
+};
+
+export default function PatientManagement() {
+  const [patients, setPatients] = useState(INITIAL_PATIENTS);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('all');
+  const [selected, setSelected] = useState(null);
   const [activeTab, setActiveTab] = useState('queue');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterBy, setFilterBy] = useState('all');
-  const [selectedPatient, setSelectedPatient] = useState(null);
-  const [showPatientDetails, setShowPatientDetails] = useState(false);
 
-  // Patient Queue State
-  const [patientQueue, setPatientQueue] = useState([
-    {
-      id: 1,
-      name: 'John Smith',
-      age: 45,
-      gender: 'male',
-      profilePhoto: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&auto=format',
-      appointmentTime: '09:00 AM',
-      appointmentType: 'scheduled',
-      priority: 'normal',
-      chiefComplaint: 'Chest pain and shortness of breath',
-      visitReasonTags: ['cardiac', 'respiratory', 'emergency', 'follow-up'],
-      symptomSeverity: 'moderate',
-      symptomDuration: '2 days',
-      waitingTime: 15,
-      status: 'waiting',
-      paymentStatus: 'paid',
-      consultationType: 'video',
-      lastVisit: '2024-01-10',
-      contactInfo: {
-        phone: '+1 (555) 123-4567',
-        email: 'john.smith@email.com',
-        address: '123 Main St, New York, NY 10001'
-      },
-      medicalInfo: {
-        allergies: ['Penicillin', 'Shellfish'],
-        currentMedications: ['Lisinopril 10mg', 'Metformin 500mg'],
-        chronicConditions: ['Hypertension', 'Type 2 Diabetes'],
-        familyHistory: 'Father: Heart disease, Mother: Diabetes',
-        pastMedicalHistory: 'Appendectomy (2010), Broken arm (2018)',
-        insuranceProvider: 'Blue Cross Blue Shield',
-        emergencyContact: 'Jane Smith (Wife) - +1 (555) 123-4568'
-      },
-      aiPreDiagnosis: {
-        confidence: 85,
-        suggestedConditions: ['Angina', 'Acid Reflux', 'Anxiety'],
-        recommendedTests: ['ECG', 'Chest X-ray', 'Blood pressure'],
-        riskFactors: ['Age', 'Diabetes', 'Hypertension'],
-        urgencyLevel: 'moderate'
-      },
-      vitals: {
-        bloodPressure: '140/90',
-        heartRate: 88,
-        temperature: 98.6,
-        oxygenSaturation: 97,
-        weight: 180,
-        height: '5\'10"',
-        bmi: 25.8
-      }
-    },
-    {
-      id: 2,
-      name: 'Maria Garcia',
-      age: 32,
-      gender: 'female',
-      profilePhoto: 'https://images.unsplash.com/photo-1494790108755-2616b612b789?w=100&h=100&fit=crop&auto=format',
-      appointmentTime: '09:30 AM',
-      appointmentType: 'walk-in',
-      priority: 'high',
-      chiefComplaint: 'Severe headache and nausea',
-      visitReasonTags: ['neurological', 'acute', 'pain-management'],
-      symptomSeverity: 'severe',
-      symptomDuration: '6 hours',
-      waitingTime: 45,
-      status: 'waiting',
-      paymentStatus: 'pending',
-      consultationType: 'video',
-      lastVisit: '2023-11-15',
-      contactInfo: {
-        phone: '+1 (555) 234-5678',
-        email: 'maria.garcia@email.com',
-        address: '456 Oak Ave, Brooklyn, NY 11201'
-      },
-      medicalInfo: {
-        allergies: ['Aspirin'],
-        currentMedications: ['Birth control pills'],
-        chronicConditions: [],
-        familyHistory: 'Mother: Migraines',
-        pastMedicalHistory: 'No significant history',
-        insuranceProvider: 'Aetna',
-        emergencyContact: 'Carlos Garcia (Husband) - +1 (555) 234-5679'
-      },
-      aiPreDiagnosis: {
-        confidence: 78,
-        suggestedConditions: ['Migraine', 'Tension headache', 'Sinus infection'],
-        recommendedTests: ['Blood pressure', 'Neurological exam'],
-        riskFactors: ['Female', 'Age group'],
-        urgencyLevel: 'high'
-      },
-      vitals: {
-        bloodPressure: '110/70',
-        heartRate: 95,
-        temperature: 99.2,
-        oxygenSaturation: 98,
-        weight: 135,
-        height: '5\'6"',
-        bmi: 21.8
-      }
-    },
-    {
-      id: 3,
-      name: 'Robert Johnson',
-      age: 68,
-      gender: 'male',
-      profilePhoto: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&auto=format',
-      appointmentTime: '10:00 AM',
-      appointmentType: 'scheduled',
-      priority: 'critical',
-      chiefComplaint: 'Difficulty breathing and chest tightness',
-      visitReasonTags: ['respiratory', 'cardiac', 'critical', 'chronic-condition'],
-      symptomSeverity: 'severe',
-      symptomDuration: '1 hour',
-      waitingTime: 5,
-      status: 'in-consultation',
-      paymentStatus: 'paid',
-      consultationType: 'video',
-      lastVisit: '2024-01-05',
-      contactInfo: {
-        phone: '+1 (555) 345-6789',
-        email: 'robert.johnson@email.com',
-        address: '789 Pine St, Manhattan, NY 10002'
-      },
-      medicalInfo: {
-        allergies: ['Sulfa drugs', 'Latex'],
-        currentMedications: ['Warfarin 5mg', 'Furosemide 40mg', 'Carvedilol 25mg'],
-        chronicConditions: ['Heart failure', 'Atrial fibrillation'],
-        familyHistory: 'Father: Heart attack, Mother: Stroke',
-        pastMedicalHistory: 'CABG (2018), Pacemaker implant (2020)',
-        insuranceProvider: 'Medicare',
-        emergencyContact: 'Linda Johnson (Daughter) - +1 (555) 345-6780'
-      },
-      aiPreDiagnosis: {
-        confidence: 92,
-        suggestedConditions: ['Heart failure exacerbation', 'Pneumonia', 'COPD'],
-        recommendedTests: ['ECG', 'Chest X-ray', 'BNP', 'Complete blood count'],
-        riskFactors: ['Age', 'Heart failure', 'Previous cardiac surgery'],
-        urgencyLevel: 'critical'
-      },
-      vitals: {
-        bloodPressure: '150/95',
-        heartRate: 110,
-        temperature: 100.1,
-        oxygenSaturation: 92,
-        weight: 200,
-        height: '6\'0"',
-        bmi: 27.1
-      }
-    }
-  ]);
-
-  const [scheduledPatients, setScheduledPatients] = useState([
-    {
-      id: 4,
-      name: 'Emily Chen',
-      age: 28,
-      appointmentTime: '11:00 AM',
-      appointmentType: 'follow-up',
-      priority: 'normal',
-      chiefComplaint: 'Routine check-up for diabetes management',
-      visitReasonTags: ['routine', 'diabetes', 'chronic-condition', 'preventive'],
-      symptomSeverity: 'none',
-      symptomDuration: 'ongoing',
-      consultationType: 'video',
-      status: 'scheduled'
-    },
-    {
-      id: 5,
-      name: 'Michael Brown',
-      age: 55,
-      appointmentTime: '11:30 AM',
-      appointmentType: 'consultation',
-      priority: 'normal',
-      chiefComplaint: 'High blood pressure monitoring',
-      visitReasonTags: ['routine', 'hypertension', 'chronic-condition', 'monitoring'],
-      symptomSeverity: 'mild',
-      symptomDuration: 'ongoing',
-      consultationType: 'phone',
-      status: 'scheduled'
-    }
-  ]);
-
-  const [patientHistory, setPatientHistory] = useState([
-    {
-      id: 6,
-      name: 'Sarah Wilson',
-      age: 42,
-      lastConsultation: '2024-01-14',
-      consultationType: 'video',
-      diagnosis: 'Acute bronchitis',
-      status: 'completed',
-      rating: 5
-    },
-    {
-      id: 7,
-      name: 'David Miller',
-      age: 35,
-      lastConsultation: '2024-01-13',
-      consultationType: 'text',
-      diagnosis: 'Common cold',
-      status: 'completed',
-      rating: 4
-    }
-  ]);
-
-  const priorityColors = {
-    critical: 'bg-red-100 text-red-800 border-red-200',
-    high: 'bg-orange-100 text-orange-800 border-orange-200',
-    normal: 'bg-green-100 text-green-800 border-green-200',
-    low: 'bg-blue-100 text-blue-800 border-blue-200'
-  };
-
-  const statusColors = {
-    waiting: 'bg-yellow-100 text-yellow-800',
-    'in-consultation': 'bg-blue-100 text-blue-800',
-    completed: 'bg-green-100 text-green-800',
-    scheduled: 'bg-purple-100 text-purple-800',
-    cancelled: 'bg-red-100 text-red-800'
-  };
-
-  const acceptPatient = (patientId) => {
-    setPatientQueue(prev => prev.map(patient => 
-      patient.id === patientId 
-        ? { ...patient, status: 'in-consultation' }
-        : patient
-    ));
-    toast.success('Patient consultation started');
-  };
-
-  const rejectPatient = (patientId, reason) => {
-    setPatientQueue(prev => prev.filter(patient => patient.id !== patientId));
-    toast.info(`Patient consultation declined: ${reason}`);
-  };
-
-  const setPriority = (patientId, priority) => {
-    setPatientQueue(prev => prev.map(patient => 
-      patient.id === patientId 
-        ? { ...patient, priority }
-        : patient
-    ));
-    toast.success(`Patient priority updated to ${priority}`);
-  };
-
-  const startConsultation = (patient, mode) => {
-    toast.success(`Starting ${mode} consultation with ${patient.name}`);
-    // This would typically open the consultation interface
-  };
-
-  const viewPatientDetails = (patient) => {
-    setSelectedPatient(patient);
-    setShowPatientDetails(true);
-  };
-
-  const filteredQueue = patientQueue.filter(patient => {
-    const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         patient.chiefComplaint.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterBy === 'all' || patient.priority === filterBy || patient.status === filterBy;
-    return matchesSearch && matchesFilter;
+  const filtered = patients.filter(p => {
+    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.chiefComplaint.toLowerCase().includes(search.toLowerCase());
+    const matchFilter = filter === 'all' || p.priority === filter || p.status === filter;
+    return matchSearch && matchFilter;
   });
 
+  const stats = {
+    total: patients.length,
+    waiting: patients.filter(p => p.status === 'waiting').length,
+    critical: patients.filter(p => p.priority === 'critical').length,
+    avgWait: Math.round(patients.reduce((a, p) => a + p.waitingTime, 0) / patients.length),
+  };
+
+  const updateStatus = (id, status) => {
+    setPatients(prev => prev.map(p => p.id === id ? { ...p, status } : p));
+    toast.success(`Patient status updated to ${status}`);
+  };
+
+  const tabs = [
+    { id: 'queue', label: 'Patient Queue', count: stats.waiting },
+    { id: 'all', label: 'All Patients', count: stats.total },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 pt-24 pb-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">Patient Management</h1>
-              <p className="text-gray-600">Manage your patient queue, appointments, and consultations</p>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl">
-                <Users className="w-5 h-5" />
-                <span className="font-semibold">{patientQueue.length} in Queue</span>
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="section-label">Clinical</span>
+          <span className="text-[#CBD5E1] text-xs">·</span>
+          <span className="section-label">Patient Queue</span>
+        </div>
+        <div className="flex items-start justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="font-display text-3xl font-bold text-[#0F172A]">Patient Management</h1>
+            <p className="text-[#64748B] mt-1 text-sm">Manage patient queue, appointments, and records</p>
+          </div>
+          <button onClick={() => toast.info('Add Patient form coming soon')} className="btn-primary flex items-center gap-2">
+            <UserPlus className="w-4 h-4" />Add Patient
+          </button>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {[
+          { label: 'Total Today', value: stats.total, icon: Users, color: 'text-[#1E40AF]', bg: 'bg-[#EFF6FF]' },
+          { label: 'Waiting', value: stats.waiting, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
+          { label: 'Critical', value: stats.critical, icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50' },
+          { label: 'Avg Wait (min)', value: stats.avgWait, icon: Clock, color: 'text-green-600', bg: 'bg-green-50' },
+        ].map((stat, i) => (
+          <div key={i} className="card">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold text-[#0F172A]">{stat.value}</div>
+                <div className="text-xs text-[#64748B] mt-0.5">{stat.label}</div>
               </div>
-              <button className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors">
-                <UserPlus className="w-5 h-5" />
-                <span>Add Patient</span>
-              </button>
+              <div className={`w-9 h-9 rounded-lg ${stat.bg} flex items-center justify-center`}>
+                <stat.icon className={`w-4 h-4 ${stat.color}`} />
+              </div>
             </div>
           </div>
-        </motion.div>
+        ))}
+      </div>
 
-        {/* Tab Navigation */}
-        <div className="bg-white rounded-xl shadow-lg p-2 mb-8">
-          <div className="flex space-x-2">
-            {[
-              { id: 'queue', label: 'Current Queue', icon: Users, count: patientQueue.length },
-              { id: 'scheduled', label: 'Scheduled', icon: Calendar, count: scheduledPatients.length },
-              { id: 'history', label: 'History', icon: History, count: patientHistory.length }
-            ].map(tab => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 px-4 py-3 rounded-lg font-medium transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-blue-500 text-white shadow-lg'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{tab.label}</span>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    activeTab === tab.id ? 'bg-white/20' : 'bg-gray-200 text-gray-600'
-                  }`}>
-                    {tab.count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+      {/* Tabs + Filters */}
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+        <div className="flex border-b border-[#E2E8F0]">
+          {tabs.map(t => (
+            <button key={t.id} onClick={() => setActiveTab(t.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                activeTab === t.id ? 'border-[#1E40AF] text-[#1E40AF]' : 'border-transparent text-[#64748B]'
+              }`}>
+              {t.label}
+              <span className={`text-xs px-1.5 py-0.5 rounded-md ${activeTab === t.id ? 'bg-[#EFF6FF] text-[#1E40AF]' : 'bg-[#F1F5F9] text-[#64748B]'}`}>{t.count}</span>
+            </button>
+          ))}
         </div>
-
-        {/* Search and Filter */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search patients by name or complaint..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div className="flex items-center space-x-4">
-              <select
-                value={filterBy}
-                onChange={(e) => setFilterBy(e.target.value)}
-                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="all">All Patients</option>
-                <option value="critical">Critical</option>
-                <option value="high">High Priority</option>
-                <option value="normal">Normal</option>
-                <option value="waiting">Waiting</option>
-                <option value="in-consultation">In Consultation</option>
-              </select>
-              <button className="flex items-center space-x-2 px-4 py-3 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
-                <Filter className="w-5 h-5" />
-                <span>Filter</span>
-              </button>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+            <input className="input pl-9 w-56" placeholder="Search patients..." value={search} onChange={e => setSearch(e.target.value)} />
           </div>
+          <select className="input w-auto" value={filter} onChange={e => setFilter(e.target.value)}>
+            <option value="all">All Priority</option>
+            <option value="critical">Critical</option>
+            <option value="urgent">Urgent</option>
+            <option value="normal">Normal</option>
+          </select>
         </div>
+      </div>
 
-        {/* Tab Content */}
-        <AnimatePresence mode="wait">
-          {activeTab === 'queue' && (
-            <motion.div
-              key="queue"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-4"
-            >
-              {filteredQueue.map((patient, index) => (
-                <motion.div
-                  key={patient.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className={`bg-white rounded-xl shadow-lg p-6 border-l-4 ${
-                    patient.priority === 'critical' ? 'border-red-500' :
-                    patient.priority === 'high' ? 'border-orange-500' :
-                    patient.priority === 'normal' ? 'border-green-500' : 'border-blue-500'
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    {/* Patient Info */}
-                    <div className="flex items-start space-x-4 flex-1">
-                      <div className="relative">
-                        <img
-                          src={patient.profilePhoto}
-                          alt={patient.name}
-                          className="w-16 h-16 rounded-full object-cover"
-                        />
-                        <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white ${
-                          patient.status === 'waiting' ? 'bg-yellow-500' :
-                          patient.status === 'in-consultation' ? 'bg-blue-500' : 'bg-green-500'
-                        }`} />
-                      </div>
-                      
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="text-xl font-semibold text-gray-900">{patient.name}</h3>
-                          <span className="text-gray-500">•</span>
-                          <span className="text-gray-600">{patient.age} years, {patient.gender}</span>
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium border ${priorityColors[patient.priority]}`}>
-                            {patient.priority}
-                          </span>
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[patient.status]}`}>
-                            {patient.status}
-                          </span>
-                        </div>
-                        
-                        <div className="grid md:grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <p className="text-sm text-gray-500 mb-1">Chief Complaint</p>
-                            <p className="text-gray-900">{patient.chiefComplaint}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500 mb-1">Appointment Details</p>
-                            <div className="flex items-center space-x-2">
-                              <Clock className="w-4 h-4 text-gray-400" />
-                              <span className="text-gray-900">{patient.appointmentTime}</span>
-                              <span className="text-gray-500">•</span>
-                              <span className="text-gray-600">{patient.appointmentType}</span>
-                              <span className="text-gray-500">•</span>
-                              <span className="text-gray-600">Waiting: {patient.waitingTime}m</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* AI Pre-diagnosis */}
-                        <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 mb-4">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <Zap className="w-5 h-5 text-purple-600" />
-                            <h4 className="font-semibold text-gray-900">AI Pre-Diagnosis</h4>
-                            <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">
-                              {patient.aiPreDiagnosis.confidence}% confidence
-                            </span>
-                          </div>
-                          <div className="grid md:grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <p className="text-gray-600 mb-1">Suggested Conditions:</p>
-                              <div className="flex flex-wrap gap-1">
-                                {patient.aiPreDiagnosis.suggestedConditions.map((condition, i) => (
-                                  <span key={i} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
-                                    {condition}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                            <div>
-                              <p className="text-gray-600 mb-1">Recommended Tests:</p>
-                              <div className="flex flex-wrap gap-1">
-                                {patient.aiPreDiagnosis.recommendedTests.map((test, i) => (
-                                  <span key={i} className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
-                                    {test}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Visit Reason Tags */}
-                        <div className="mb-4">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <FileText className="w-4 h-4 text-gray-500" />
-                            <span className="text-sm font-medium text-gray-700">Visit Context</span>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              patient.symptomSeverity === 'severe' ? 'bg-red-100 text-red-800' :
-                              patient.symptomSeverity === 'moderate' ? 'bg-yellow-100 text-yellow-800' :
-                              patient.symptomSeverity === 'mild' ? 'bg-green-100 text-green-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {patient.symptomSeverity} • {patient.symptomDuration}
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {patient.visitReasonTags?.map((tag, i) => {
-                              const tagColors = {
-                                'cardiac': 'bg-red-50 text-red-700 border-red-200',
-                                'respiratory': 'bg-blue-50 text-blue-700 border-blue-200',
-                                'neurological': 'bg-purple-50 text-purple-700 border-purple-200',
-                                'emergency': 'bg-red-100 text-red-800 border-red-300',
-                                'critical': 'bg-red-100 text-red-800 border-red-300',
-                                'acute': 'bg-orange-50 text-orange-700 border-orange-200',
-                                'chronic-condition': 'bg-indigo-50 text-indigo-700 border-indigo-200',
-                                'routine': 'bg-green-50 text-green-700 border-green-200',
-                                'follow-up': 'bg-teal-50 text-teal-700 border-teal-200',
-                                'pain-management': 'bg-pink-50 text-pink-700 border-pink-200',
-                                'preventive': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                'monitoring': 'bg-cyan-50 text-cyan-700 border-cyan-200',
-                                'diabetes': 'bg-amber-50 text-amber-700 border-amber-200',
-                                'hypertension': 'bg-rose-50 text-rose-700 border-rose-200'
-                              };
-                              return (
-                                <span key={i} className={`px-2 py-1 border rounded-full text-xs font-medium ${
-                                  tagColors[tag] || 'bg-gray-50 text-gray-700 border-gray-200'
-                                }`}>
-                                  {tag.replace('-', ' ')}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* Quick Info */}
-                        <div className="flex items-center space-x-6 text-sm text-gray-600">
-                          <div className="flex items-center space-x-1">
-                            <Phone className="w-4 h-4" />
-                            <span>{patient.contactInfo.phone}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Shield className="w-4 h-4" />
-                            <span>{patient.medicalInfo.insuranceProvider}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Calendar className="w-4 h-4" />
-                            <span>Last visit: {patient.lastVisit}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center space-x-2 ml-4">
-                      <button
-                        onClick={() => viewPatientDetails(patient)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="View Details"
-                      >
-                        <Eye className="w-5 h-5" />
-                      </button>
-                      
-                      {patient.status === 'waiting' && (
-                        <>
-                          <button
-                            onClick={() => startConsultation(patient, 'video')}
-                            className="flex items-center space-x-1 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                          >
-                            <Video className="w-4 h-4" />
-                            <span>Video</span>
-                          </button>
-                          <button
-                            onClick={() => startConsultation(patient, 'voice')}
-                            className="flex items-center space-x-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                          >
-                            <Phone className="w-4 h-4" />
-                            <span>Voice</span>
-                          </button>
-                          <button
-                            onClick={() => startConsultation(patient, 'text')}
-                            className="flex items-center space-x-1 px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
-                          >
-                            <MessageSquare className="w-4 h-4" />
-                            <span>Text</span>
-                          </button>
-                        </>
-                      )}
-                      
-                      <div className="relative">
-                        <button className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
-                          <MoreVertical className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-
-          {activeTab === 'scheduled' && (
-            <motion.div
-              key="scheduled"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-4"
-            >
-              {scheduledPatients.map((patient, index) => (
-                <motion.div
-                  key={patient.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-white rounded-xl shadow-lg p-6"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <User className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{patient.name}</h3>
-                        <p className="text-gray-600">{patient.age} years • {patient.appointmentType}</p>
-                        <p className="text-sm text-gray-500">{patient.chiefComplaint}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <p className="font-semibold text-gray-900">{patient.appointmentTime}</p>
-                        <p className="text-sm text-gray-500">{patient.consultationType} consultation</p>
-                      </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[patient.status]}`}>
-                        {patient.status}
-                      </span>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-
-          {activeTab === 'history' && (
-            <motion.div
-              key="history"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-4"
-            >
-              {patientHistory.map((patient, index) => (
-                <motion.div
-                  key={patient.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-white rounded-xl shadow-lg p-6"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
-                        <CheckCircle className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{patient.name}</h3>
-                        <p className="text-gray-600">{patient.age} years • {patient.diagnosis}</p>
-                        <p className="text-sm text-gray-500">Last consultation: {patient.lastConsultation}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-4 h-4 ${
-                              i < patient.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[patient.status]}`}>
-                        {patient.status}
-                      </span>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Patient Details Modal */}
-        <AnimatePresence>
-          {showPatientDetails && selectedPatient && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-              onClick={() => setShowPatientDetails(false)}
-            >
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Patient List */}
+        <div className="lg:col-span-2 space-y-3">
+          {filtered.map(patient => {
+            const prio = PRIORITY_CONFIG[patient.priority];
+            const status = STATUS_CONFIG[patient.status];
+            return (
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+                key={patient.id}
+                whileHover={{ x: 2 }}
+                onClick={() => setSelected(patient)}
+                className={`card cursor-pointer transition-all hover:border-[#1E40AF] ${selected?.id === patient.id ? 'border-[#1E40AF] bg-[#F8FAFF]' : ''}`}
               >
-                {/* Modal Header */}
-                <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <img
-                      src={selectedPatient.profilePhoto}
-                      alt={selectedPatient.name}
-                      className="w-16 h-16 rounded-full object-cover"
-                    />
-                    <div>
-                      <h2 className="text-2xl font-bold text-gray-900">{selectedPatient.name}</h2>
-                      <p className="text-gray-600">{selectedPatient.age} years, {selectedPatient.gender}</p>
+                <div className="flex items-start gap-4">
+                  <div className="relative flex-shrink-0">
+                    <img src={patient.photo} alt={patient.name} className="w-10 h-10 rounded-full object-cover" onError={e => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(patient.name)}&background=1E40AF&color=fff`; }} />
+                    <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${prio.dot}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium text-[#0F172A] text-sm">{patient.name}</span>
+                      <span className="text-xs text-[#94A3B8]">· {patient.age}y {patient.gender}</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${prio.cls}`}>{prio.label}</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${status.cls}`}>{status.label}</span>
+                    </div>
+                    <p className="text-xs text-[#64748B] mt-1 truncate">{patient.chiefComplaint}</p>
+                    <div className="flex items-center gap-4 mt-2">
+                      <span className="flex items-center gap-1 text-[10px] text-[#94A3B8]"><Clock className="w-3 h-3" />{patient.appointmentTime}</span>
+                      <span className="flex items-center gap-1 text-[10px] text-[#94A3B8]"><Clock className="w-3 h-3" />Wait: {patient.waitingTime}min</span>
+                      <span className={`flex items-center gap-1 text-[10px] text-[#94A3B8]`}>
+                        {patient.type === 'video' ? <Video className="w-3 h-3" /> : patient.type === 'in-person' ? <User className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                        {patient.type}
+                      </span>
                     </div>
                   </div>
-                  <button
-                    onClick={() => setShowPatientDetails(false)}
-                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <XCircle className="w-6 h-6" />
-                  </button>
-                </div>
-
-                {/* Modal Content */}
-                <div className="p-6 space-y-6">
-                  {/* Current Visit */}
-                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Current Visit</h3>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Chief Complaint</p>
-                        <p className="text-gray-900 font-medium">{selectedPatient.chiefComplaint}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Appointment Time</p>
-                        <p className="text-gray-900 font-medium">{selectedPatient.appointmentTime}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Priority Level</p>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${priorityColors[selectedPatient.priority]}`}>
-                          {selectedPatient.priority}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Consultation Type</p>
-                        <p className="text-gray-900 font-medium">{selectedPatient.consultationType}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Contact Information */}
-                  <div className="bg-white border border-gray-200 rounded-xl p-6">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Contact Information</h3>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="flex items-center space-x-3">
-                        <Phone className="w-5 h-5 text-gray-400" />
-                        <div>
-                          <p className="text-sm text-gray-600">Phone</p>
-                          <p className="text-gray-900">{selectedPatient.contactInfo.phone}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <Mail className="w-5 h-5 text-gray-400" />
-                        <div>
-                          <p className="text-sm text-gray-600">Email</p>
-                          <p className="text-gray-900">{selectedPatient.contactInfo.email}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <MapPin className="w-5 h-5 text-gray-400" />
-                        <div>
-                          <p className="text-sm text-gray-600">Address</p>
-                          <p className="text-gray-900">{selectedPatient.contactInfo.address}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <Bell className="w-5 h-5 text-gray-400" />
-                        <div>
-                          <p className="text-sm text-gray-600">Emergency Contact</p>
-                          <p className="text-gray-900">{selectedPatient.medicalInfo.emergencyContact}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Medical Information */}
-                  <div className="bg-white border border-gray-200 rounded-xl p-6">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Medical Information</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-sm text-gray-600 mb-2">Allergies</p>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedPatient.medicalInfo.allergies.map((allergy, i) => (
-                            <span key={i} className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
-                              {allergy}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600 mb-2">Current Medications</p>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedPatient.medicalInfo.currentMedications.map((medication, i) => (
-                            <span key={i} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                              {medication}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600 mb-2">Chronic Conditions</p>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedPatient.medicalInfo.chronicConditions.map((condition, i) => (
-                            <span key={i} className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
-                              {condition}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Family History</p>
-                        <p className="text-gray-900">{selectedPatient.medicalInfo.familyHistory}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">Past Medical History</p>
-                        <p className="text-gray-900">{selectedPatient.medicalInfo.pastMedicalHistory}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Current Vitals */}
-                  <div className="bg-white border border-gray-200 rounded-xl p-6">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Current Vitals</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="text-center p-4 bg-red-50 rounded-lg">
-                        <Heart className="w-8 h-8 mx-auto text-red-500 mb-2" />
-                        <p className="text-sm text-gray-600">Blood Pressure</p>
-                        <p className="text-lg font-semibold text-gray-900">{selectedPatient.vitals.bloodPressure}</p>
-                      </div>
-                      <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <Activity className="w-8 h-8 mx-auto text-blue-500 mb-2" />
-                        <p className="text-sm text-gray-600">Heart Rate</p>
-                        <p className="text-lg font-semibold text-gray-900">{selectedPatient.vitals.heartRate} bpm</p>
-                      </div>
-                      <div className="text-center p-4 bg-green-50 rounded-lg">
-                        <Target className="w-8 h-8 mx-auto text-green-500 mb-2" />
-                        <p className="text-sm text-gray-600">Temperature</p>
-                        <p className="text-lg font-semibold text-gray-900">{selectedPatient.vitals.temperature}°F</p>
-                      </div>
-                      <div className="text-center p-4 bg-purple-50 rounded-lg">
-                        <Activity className="w-8 h-8 mx-auto text-purple-500 mb-2" />
-                        <p className="text-sm text-gray-600">Oxygen Sat.</p>
-                        <p className="text-lg font-semibold text-gray-900">{selectedPatient.vitals.oxygenSaturation}%</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex justify-center space-x-4">
-                    <button
-                      onClick={() => startConsultation(selectedPatient, 'video')}
-                      className="flex items-center space-x-2 px-6 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors"
-                    >
-                      <Video className="w-5 h-5" />
-                      <span>Start Video Call</span>
+                  <div className="flex flex-col gap-2">
+                    <button onClick={e => { e.stopPropagation(); toast.info(`Starting call with ${patient.name}`); }} className="p-1.5 text-[#64748B] hover:text-[#1E40AF] border border-[#E2E8F0] rounded-lg hover:border-[#1E40AF] transition-colors">
+                      <Video className="w-3.5 h-3.5" />
                     </button>
-                    <button
-                      onClick={() => startConsultation(selectedPatient, 'voice')}
-                      className="flex items-center space-x-2 px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
-                    >
-                      <Phone className="w-5 h-5" />
-                      <span>Start Voice Call</span>
-                    </button>
-                    <button
-                      onClick={() => startConsultation(selectedPatient, 'text')}
-                      className="flex items-center space-x-2 px-6 py-3 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition-colors"
-                    >
-                      <MessageSquare className="w-5 h-5" />
-                      <span>Start Text Chat</span>
+                    <button onClick={e => { e.stopPropagation(); updateStatus(patient.id, 'in-progress'); }} className="p-1.5 text-[#64748B] hover:text-green-600 border border-[#E2E8F0] rounded-lg hover:border-green-500 transition-colors">
+                      <CheckCircle className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
               </motion.div>
-            </motion.div>
+            );
+          })}
+          {filtered.length === 0 && (
+            <div className="card text-center py-12">
+              <Users className="w-10 h-10 text-[#94A3B8] mx-auto mb-3" />
+              <p className="text-[#64748B] font-medium">No patients found</p>
+            </div>
           )}
-        </AnimatePresence>
+        </div>
+
+        {/* Patient Detail Panel */}
+        <div className="space-y-4">
+          {selected ? (
+            <AnimatePresence>
+              <motion.div key={selected.id} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
+                <div className="card">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <img src={selected.photo} alt={selected.name} className="w-12 h-12 rounded-full object-cover" onError={e => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selected.name)}&background=1E40AF&color=fff`; }} />
+                      <div>
+                        <div className="font-semibold text-[#0F172A]">{selected.name}</div>
+                        <div className="text-xs text-[#64748B]">{selected.age} years · {selected.gender === 'M' ? 'Male' : 'Female'} · {selected.bloodType}</div>
+                      </div>
+                    </div>
+                    <button onClick={() => setSelected(null)} className="text-[#94A3B8] hover:text-[#0F172A]"><X className="w-4 h-4" /></button>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="grid grid-cols-3 gap-2 mb-4">
+                    {[
+                      { label: 'Call', icon: Phone, action: () => toast.info('Initiating call...') },
+                      { label: 'Video', icon: Video, action: () => toast.info('Starting video...') },
+                      { label: 'Message', icon: MessageSquare, action: () => toast.info('Opening chat...') },
+                    ].map(a => (
+                      <button key={a.label} onClick={a.action} className="flex flex-col items-center gap-1 p-2 border border-[#E2E8F0] rounded-lg hover:border-[#1E40AF] hover:text-[#1E40AF] transition-colors text-[#64748B] text-xs">
+                        <a.icon className="w-4 h-4" />{a.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Vitals */}
+                  <div className="mb-4">
+                    <div className="section-label mb-2">Current Vitals</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { label: 'BP', value: selected.vitals.bp, unit: 'mmHg' },
+                        { label: 'HR', value: selected.vitals.hr, unit: 'bpm' },
+                        { label: 'Temp', value: selected.vitals.temp, unit: '°F' },
+                        { label: 'SpO₂', value: selected.vitals.o2, unit: '%' },
+                      ].map((v, i) => (
+                        <div key={i} className="bg-[#F8FAFC] rounded-lg p-2 text-center">
+                          <div className="text-sm font-bold text-[#0F172A]">{v.value}</div>
+                          <div className="text-[10px] text-[#64748B]">{v.label} ({v.unit})</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Chief Complaint */}
+                  <div className="mb-4">
+                    <div className="section-label mb-1">Chief Complaint</div>
+                    <p className="text-sm text-[#374151]">{selected.chiefComplaint}</p>
+                  </div>
+
+                  {/* Conditions & Allergies */}
+                  {(selected.conditions.length > 0 || selected.allergies.length > 0) && (
+                    <div className="space-y-2 mb-4">
+                      {selected.conditions.length > 0 && (
+                        <div>
+                          <div className="section-label mb-1">Conditions</div>
+                          <div className="flex flex-wrap gap-1">
+                            {selected.conditions.map(c => <span key={c} className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded border border-blue-200">{c}</span>)}
+                          </div>
+                        </div>
+                      )}
+                      {selected.allergies.length > 0 && (
+                        <div>
+                          <div className="section-label mb-1">Allergies</div>
+                          <div className="flex flex-wrap gap-1">
+                            {selected.allergies.map(a => <span key={a} className="px-2 py-0.5 bg-red-50 text-red-700 text-xs rounded border border-red-200">{a}</span>)}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Contact */}
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center gap-2 text-xs text-[#64748B]"><Phone className="w-3.5 h-3.5" />{selected.contact}</div>
+                    <div className="flex items-center gap-2 text-xs text-[#64748B]"><Mail className="w-3.5 h-3.5" />{selected.email}</div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="space-y-2">
+                    <button onClick={() => { updateStatus(selected.id, 'in-progress'); }} className="btn-primary w-full text-sm">Start Consultation</button>
+                    <button onClick={() => { updateStatus(selected.id, 'completed'); setSelected(null); }} className="btn-secondary w-full text-sm">Mark Complete</button>
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          ) : (
+            <div className="card text-center py-12">
+              <User className="w-10 h-10 text-[#94A3B8] mx-auto mb-3" />
+              <p className="text-sm text-[#64748B]">Select a patient to view details</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
-};
-
-export default PatientManagement;
+}
