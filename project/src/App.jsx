@@ -38,130 +38,75 @@ import ExamPortal from './pages/ExamPortal.jsx';
 import { UserProvider } from './context/UserContext.jsx';
 import { LayoutProvider, useLayout } from './context/LayoutContext.jsx';
 import LoadingSpinner from './components/LoadingSpinner.jsx';
-import WorkflowGuide from './components/WorkflowGuide.jsx';
-import QuickAccessToolbar from './components/QuickAccessToolbar.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import PWAInstaller from './components/PWAInstaller.jsx';
 import { notificationService } from './utils/notifications.js';
 import { offlineStorage } from './utils/offlineStorage.js';
+
+const pageVariants = {
+  initial: { opacity: 0, y: 6 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: 'easeOut' } },
+  exit: { opacity: 0, transition: { duration: 0.15 } }
+};
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
-    // Initialize app with simplified approach
     const initializeApp = async () => {
       try {
-        console.log('Starting app initialization...');
-
-        // Initialize offline storage with timeout
-        const storagePromise = Promise.race([
+        await Promise.race([
           offlineStorage.initialize(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Storage timeout')), 3000))
-        ]);
+          new Promise((_, reject) => setTimeout(() => reject(), 3000))
+        ]).catch(() => {});
 
-        try {
-          await storagePromise;
-          console.log('Offline storage initialized');
-        } catch (error) {
-          console.warn('Offline storage failed, continuing without it:', error);
-        }
-
-        // Initialize notification service with timeout
-        const notificationPromise = Promise.race([
+        await Promise.race([
           notificationService.initialize(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Notification timeout')), 2000))
-        ]);
+          new Promise((_, reject) => setTimeout(() => reject(), 2000))
+        ]).catch(() => {});
 
-        try {
-          await notificationPromise;
-          console.log('Notification service initialized');
-        } catch (error) {
-          console.warn('Notification service failed, continuing without it:', error);
-        }
-
-        // Register service worker (optional)
         if ('serviceWorker' in navigator) {
-          try {
-            await navigator.serviceWorker.register('/sw.js');
-            console.log('Service worker registered');
-          } catch (error) {
-            console.warn('Service worker registration failed:', error);
-          }
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
         }
-
-        console.log('App initialized successfully');
-      } catch (error) {
-        console.error('Error initializing app:', error);
       } finally {
-        // Always set loading to false
         setIsLoading(false);
       }
     };
 
-    // Reduce initial delay and add fallback
-    const timer = setTimeout(initializeApp, 800);
-
-    // Fallback: if initialization takes too long, just show the app
-    const fallbackTimer = setTimeout(() => {
-      console.warn('Initialization taking too long, showing app anyway');
-      setIsLoading(false);
-    }, 5000);
-
-    return () => {
-      clearTimeout(timer);
-      clearTimeout(fallbackTimer);
-    };
+    const timer = setTimeout(initializeApp, 600);
+    const fallback = setTimeout(() => setIsLoading(false), 4000);
+    return () => { clearTimeout(timer); clearTimeout(fallback); };
   }, []);
 
   useEffect(() => {
-    // Handle online/offline status
-    const handleOnline = () => {
-      setIsOnline(true);
-      // Sync data when coming back online
-      offlineStorage.syncWithServer();
-    };
-
-    const handleOffline = () => {
-      setIsOnline(false);
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
+    const on = () => { setIsOnline(true); offlineStorage.syncWithServer(); };
+    const off = () => setIsOnline(false);
+    window.addEventListener('online', on);
+    window.addEventListener('offline', off);
+    return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
   }, []);
 
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
+  if (isLoading) return <LoadingSpinner />;
 
   return (
     <ErrorBoundary>
       <UserProvider>
         <LayoutProvider>
-          <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-          {/* Offline indicator */}
-          {!isOnline && (
-            <div className="fixed top-0 left-0 right-0 bg-yellow-500 text-white text-center py-2 text-sm z-50">
-              You're offline. Some features may be limited.
-            </div>
-          )}
-
-          <AnimatePresence mode="wait">
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/exam-portal" element={<ExamPortal />} />
-              <Route path="/*" element={<AuthenticatedApp />} />
-            </Routes>
-          </AnimatePresence>
-
-          {/* PWA Installer */}
-          <PWAInstaller />
+          <div className="min-h-screen bg-[#F8FAFC]">
+            {!isOnline && (
+              <div className="fixed top-0 inset-x-0 z-[60] bg-amber-500 text-white text-center py-1.5 text-xs font-medium">
+                You're offline — some features may be unavailable
+              </div>
+            )}
+            <AnimatePresence mode="wait">
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/exam-portal" element={<ExamPortal />} />
+                <Route path="/*" element={<AuthenticatedApp />} />
+              </Routes>
+            </AnimatePresence>
+            <PWAInstaller />
           </div>
         </LayoutProvider>
       </UserProvider>
@@ -171,68 +116,77 @@ function App() {
 
 function AuthenticatedApp() {
   return (
-    <div className="flex h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="flex h-screen bg-[#F8FAFC] overflow-hidden">
       <Navbar />
       <EnhancedSidebar />
-      <ResponsiveMainContent />
-      <WorkflowGuide />
-      <QuickAccessToolbar />
+      <MainContent />
     </div>
   );
 }
 
-function ResponsiveMainContent() {
+function MainContent() {
   const { isSidebarOpen, isMobile } = useLayout();
+
+  const contentLeft = isMobile ? 0 : isSidebarOpen ? 260 : 64;
 
   return (
     <motion.main
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className={`flex-1 pt-20 overflow-hidden transition-all duration-300 ${
-        isMobile 
-          ? 'pl-0' 
-          : isSidebarOpen 
-            ? 'pl-80' 
-            : 'pl-20'
-      }`}
+      style={{ marginLeft: contentLeft }}
+      animate={{ marginLeft: contentLeft }}
+      transition={{ duration: 0.25, ease: 'easeInOut' }}
+      className="flex-1 pt-[60px] overflow-hidden"
     >
-      <div className="h-full overflow-y-auto p-6">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/diagnosis" element={<Diagnosis />} />
-          <Route path="/report-analyzer" element={<ReportAnalyzer />} />
-          <Route path="/prescription" element={<Prescription />} />
-          <Route path="/emergency" element={<Emergency />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/medical-registration" element={<MedicalRegistration />} />
-          <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
-          <Route path="/examination-features" element={<ExaminationFeatures />} />
-          <Route path="/medical-history" element={<MedicalHistory />} />
-          <Route path="/lab-reports-analysis" element={<LabReportsAnalysis />} />
-          <Route path="/visual-inspection" element={<VisualInspection />} />
-          <Route path="/ai-diagnosis" element={<AIDiagnosis />} />
-          <Route path="/diagnostics-testing" element={<DiagnosticsTesting />} />
-          <Route path="/doctor-profile" element={<DoctorProfile />} />
-          <Route path="/patient-management" element={<PatientManagement />} />
-          <Route path="/consultation-modes" element={<ConsultationModes />} />
-          <Route path="/scheduling-management" element={<SchedulingManagement />} />
-          <Route path="/patient-education" element={<PatientEducation />} />
-          <Route path="/security-privacy" element={<SecurityPrivacy />} />
-          <Route path="/micro-functionalities" element={<MicroFunctionalities />} />
-          <Route path="/patient-followup" element={<PatientFollowup />} />
-          <Route path="/medical-documentation" element={<MedicalDocumentation />} />
-          <Route path="/collaboration" element={<Collaboration />} />
-          <Route path="/finance-earnings" element={<FinanceEarnings />} />
-          <Route path="/admin-compliance" element={<AdminCompliance />} />
-          <Route path="/bookmarks" element={<Bookmarks />} />
-          <Route path="/history" element={<History />} />
-          <Route path="/admin" element={<AdminPanel />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+      <div className="h-full overflow-y-auto custom-scrollbar">
+        <AnimatePresence mode="wait">
+          <Routes>
+            <Route path="/" element={<PageWrapper><Home /></PageWrapper>} />
+            <Route path="/dashboard" element={<PageWrapper><Dashboard /></PageWrapper>} />
+            <Route path="/diagnosis" element={<PageWrapper><Diagnosis /></PageWrapper>} />
+            <Route path="/report-analyzer" element={<PageWrapper><ReportAnalyzer /></PageWrapper>} />
+            <Route path="/prescription" element={<PageWrapper><Prescription /></PageWrapper>} />
+            <Route path="/emergency" element={<PageWrapper><Emergency /></PageWrapper>} />
+            <Route path="/profile" element={<PageWrapper><Profile /></PageWrapper>} />
+            <Route path="/medical-registration" element={<PageWrapper><MedicalRegistration /></PageWrapper>} />
+            <Route path="/doctor-dashboard" element={<PageWrapper><DoctorDashboard /></PageWrapper>} />
+            <Route path="/examination-features" element={<PageWrapper><ExaminationFeatures /></PageWrapper>} />
+            <Route path="/medical-history" element={<PageWrapper><MedicalHistory /></PageWrapper>} />
+            <Route path="/lab-reports-analysis" element={<PageWrapper><LabReportsAnalysis /></PageWrapper>} />
+            <Route path="/visual-inspection" element={<PageWrapper><VisualInspection /></PageWrapper>} />
+            <Route path="/ai-diagnosis" element={<PageWrapper><AIDiagnosis /></PageWrapper>} />
+            <Route path="/diagnostics-testing" element={<PageWrapper><DiagnosticsTesting /></PageWrapper>} />
+            <Route path="/doctor-profile" element={<PageWrapper><DoctorProfile /></PageWrapper>} />
+            <Route path="/patient-management" element={<PageWrapper><PatientManagement /></PageWrapper>} />
+            <Route path="/consultation-modes" element={<PageWrapper><ConsultationModes /></PageWrapper>} />
+            <Route path="/scheduling-management" element={<PageWrapper><SchedulingManagement /></PageWrapper>} />
+            <Route path="/patient-education" element={<PageWrapper><PatientEducation /></PageWrapper>} />
+            <Route path="/security-privacy" element={<PageWrapper><SecurityPrivacy /></PageWrapper>} />
+            <Route path="/micro-functionalities" element={<PageWrapper><MicroFunctionalities /></PageWrapper>} />
+            <Route path="/patient-followup" element={<PageWrapper><PatientFollowup /></PageWrapper>} />
+            <Route path="/medical-documentation" element={<PageWrapper><MedicalDocumentation /></PageWrapper>} />
+            <Route path="/collaboration" element={<PageWrapper><Collaboration /></PageWrapper>} />
+            <Route path="/finance-earnings" element={<PageWrapper><FinanceEarnings /></PageWrapper>} />
+            <Route path="/admin-compliance" element={<PageWrapper><AdminCompliance /></PageWrapper>} />
+            <Route path="/bookmarks" element={<PageWrapper><Bookmarks /></PageWrapper>} />
+            <Route path="/history" element={<PageWrapper><History /></PageWrapper>} />
+            <Route path="/admin" element={<PageWrapper><AdminPanel /></PageWrapper>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AnimatePresence>
       </div>
     </motion.main>
+  );
+}
+
+function PageWrapper({ children }) {
+  return (
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
+      {children}
+    </motion.div>
   );
 }
 
