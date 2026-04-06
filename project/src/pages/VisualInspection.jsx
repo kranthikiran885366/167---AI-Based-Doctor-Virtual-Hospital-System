@@ -1,891 +1,188 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Camera,
-  Video,
-  VideoOff,
-  Volume2,
-  VolumeX,
-  RotateCcw,
-  ZoomIn,
-  ZoomOut,
-  Flashlight,
-  FlashlightOff,
-  Maximize,
-  Minimize,
-  Download,
-  Save,
-  Share,
-  Eye,
-  Ruler,
-  Search,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  User,
-  FileText,
-  Edit,
-  Trash2,
-  Filter,
-  Calendar,
-  Archive,
-  Plus,
-  X,
-  Play,
-  Pause,
-  Square,
-  Settings,
-  Info,
-  History,
-  Star
-} from 'lucide-react';
+import { Camera, Upload, Eye, ZoomIn, ZoomOut, RotateCw, Maximize, Download, Share, AlertTriangle, CheckCircle, Info, Layers, X, FileImage, Sliders, Search, Crosshair } from 'lucide-react';
+import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
-import { useUser } from '../context/UserContext.jsx';
 
-const VisualInspection = () => {
-  const { user, addMedicalRecord } = useUser();
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [inspectionType, setInspectionType] = useState('skin');
-  const [capturedImages, setCapturedImages] = useState([]);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordings, setRecordings] = useState([]);
-  const [currentRecording, setCurrentRecording] = useState(null);
-  const [cameraSettings, setCameraSettings] = useState({
-    facingMode: 'environment',
-    zoom: 1,
-    brightness: 0,
-    contrast: 0,
-    saturation: 0
-  });
-  const [measurements, setMeasurements] = useState([]);
-  const [annotations, setAnnotations] = useState([]);
-  const [analysisResults, setAnalysisResults] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [inspectionNotes, setInspectionNotes] = useState('');
-  const [patientInfo, setPatientInfo] = useState({
-    name: user?.name || '',
-    age: '',
-    bodyPart: '',
-    symptoms: ''
-  });
+const ANALYSIS_TYPES = [
+  { id: 'skin', label: 'Skin Lesion', icon: Eye, description: 'Analyze skin lesions, moles, rashes' },
+  { id: 'wound', label: 'Wound Assessment', icon: AlertTriangle, description: 'Evaluate wounds, burns, healing progress' },
+  { id: 'eye', label: 'Eye Examination', icon: Eye, description: 'Assess eye conditions, conjunctiva' },
+  { id: 'oral', label: 'Oral Inspection', icon: Search, description: 'Inspect oral cavity, throat' },
+];
 
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const streamRef = useRef(null);
-  const mediaRecorderRef = useRef(null);
-  const recordedChunksRef = useRef([]);
+const SAMPLE_FINDINGS = [
+  { severity: 'moderate', finding: 'Irregular border detected', confidence: 87, action: 'Recommend biopsy if no improvement in 4 weeks' },
+  { severity: 'low', finding: 'Mild erythema present', confidence: 94, action: 'Topical anti-inflammatory may be helpful' },
+  { severity: 'info', finding: 'Lesion diameter approximately 6mm', confidence: 91, action: 'Monitor for size changes' },
+];
 
-  const inspectionTypes = [
-    {
-      id: 'skin',
-      name: 'Skin Examination',
-      description: 'Dermatological assessment for lesions, rashes, and abnormalities',
-      guidelines: [
-        'Use adequate lighting',
-        'Examine entire body systematically',
-        'Note size, color, texture, and borders',
-        'Check for asymmetry and changes'
-      ],
-      commonFindings: ['Mole', 'Rash', 'Lesion', 'Scar', 'Birthmark', 'Inflammation']
-    },
-    {
-      id: 'eye',
-      name: 'Eye Examination',
-      description: 'Ophthalmological inspection for external eye conditions',
-      guidelines: [
-        'Check pupil size and reactivity',
-        'Examine conjunctiva for redness',
-        'Assess eye movement and tracking',
-        'Look for discharge or tearing'
-      ],
-      commonFindings: ['Conjunctivitis', 'Ptosis', 'Stye', 'Chalazion', 'Corneal abrasion']
-    },
-    {
-      id: 'wound',
-      name: 'Wound Assessment',
-      description: 'Comprehensive wound evaluation and healing progress',
-      guidelines: [
-        'Measure wound dimensions',
-        'Assess wound bed color',
-        'Check for signs of infection',
-        'Document drainage characteristics'
-      ],
-      commonFindings: ['Healing', 'Infected', 'Necrotic', 'Granulating', 'Epithelializing']
-    },
-    {
-      id: 'oral',
-      name: 'Oral Examination',
-      description: 'Oral cavity and dental assessment',
-      guidelines: [
-        'Use proper lighting',
-        'Examine all oral structures',
-        'Check for lesions or abnormalities',
-        'Assess gum health'
-      ],
-      commonFindings: ['Dental caries', 'Gingivitis', 'Oral lesion', 'Tongue abnormality']
-    },
-    {
-      id: 'musculoskeletal',
-      name: 'Musculoskeletal Inspection',
-      description: 'Assessment of joints, muscles, and skeletal structures',
-      guidelines: [
-        'Observe symmetry and alignment',
-        'Check for swelling or deformity',
-        'Assess range of motion',
-        'Look for signs of inflammation'
-      ],
-      commonFindings: ['Swelling', 'Deformity', 'Bruising', 'Atrophy', 'Asymmetry']
+export default function VisualInspection() {
+  const [image, setImage] = useState(null);
+  const [analysisType, setAnalysisType] = useState('skin');
+  const [analyzing, setAnalyzing] = useState(false);
+  const [results, setResults] = useState(null);
+  const [zoom, setZoom] = useState(1);
+  const [notes, setNotes] = useState('');
+  const [showCamera, setShowCamera] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const onDrop = useCallback(accepted => {
+    if (accepted[0]) {
+      const url = URL.createObjectURL(accepted[0]);
+      setImage(url);
+      setResults(null);
+      toast.success('Image uploaded — ready to analyze');
     }
-  ];
-
-  useEffect(() => {
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-    };
   }, []);
 
-  const startCamera = async () => {
-    try {
-      const constraints = {
-        video: {
-          facingMode: cameraSettings.facingMode,
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
-        },
-        audio: true
-      };
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'image/*': [] }, maxSize: 10 * 1024 * 1024 });
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      videoRef.current.srcObject = stream;
-      streamRef.current = stream;
-      setIsStreaming(true);
-      toast.success('Camera started successfully');
-    } catch (error) {
-      console.error('Error starting camera:', error);
-      toast.error('Unable to access camera. Please check permissions.');
-    }
-  };
-
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      setIsStreaming(false);
-      setIsRecording(false);
-      toast.info('Camera stopped');
-    }
-  };
-
-  const captureImage = () => {
-    if (!videoRef.current || !isStreaming) return;
-
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
-    
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0);
-    
-    const imageData = canvas.toDataURL('image/jpeg', 0.9);
-    
-    const capturedImage = {
-      id: Date.now(),
-      type: inspectionType,
-      dataUrl: imageData,
+  const analyze = async () => {
+    if (!image) { toast.error('Upload an image first'); return; }
+    setAnalyzing(true);
+    await new Promise(r => setTimeout(r, 2500));
+    setResults({
+      type: ANALYSIS_TYPES.find(t => t.id === analysisType)?.label,
+      findings: SAMPLE_FINDINGS,
+      overallRisk: 'moderate',
+      recommendation: 'Clinical correlation recommended. Consider dermatology referral if findings persist.',
       timestamp: new Date().toISOString(),
-      patient: patientInfo.name,
-      bodyPart: patientInfo.bodyPart,
-      notes: inspectionNotes,
-      measurements: [],
-      annotations: [],
-      analysis: null
-    };
-
-    setCapturedImages(prev => [...prev, capturedImage]);
-    setSelectedImage(capturedImage);
-    toast.success('Image captured successfully');
-  };
-
-  const startRecording = () => {
-    if (!streamRef.current) return;
-
-    try {
-      recordedChunksRef.current = [];
-      const mediaRecorder = new MediaRecorder(streamRef.current);
-      
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          recordedChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
-        const url = URL.createObjectURL(blob);
-        
-        const recording = {
-          id: Date.now(),
-          type: inspectionType,
-          url,
-          blob,
-          timestamp: new Date().toISOString(),
-          patient: patientInfo.name,
-          duration: 0 // Will be calculated
-        };
-
-        setRecordings(prev => [...prev, recording]);
-        setCurrentRecording(recording);
-        toast.success('Recording saved successfully');
-      };
-
-      mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.start();
-      setIsRecording(true);
-      toast.info('Recording started');
-    } catch (error) {
-      console.error('Error starting recording:', error);
-      toast.error('Unable to start recording');
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      toast.info('Recording stopped');
-    }
-  };
-
-  const analyzeImage = async (image) => {
-    setIsAnalyzing(true);
-    setSelectedImage(image);
-
-    try {
-      // Simulate AI analysis
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      const analysis = generateMockAnalysis(image);
-      
-      // Update image with analysis
-      setCapturedImages(prev => prev.map(img => 
-        img.id === image.id ? { ...img, analysis } : img
-      ));
-      
-      setAnalysisResults(analysis);
-      
-      // Save to medical records
-      addMedicalRecord({
-        type: 'visual_inspection',
-        inspectionType: image.type,
-        analysis,
-        image: image.dataUrl,
-        timestamp: new Date().toISOString()
-      });
-
-      toast.success('Image analysis completed');
-    } catch (error) {
-      toast.error('Analysis failed. Please try again.');
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const generateMockAnalysis = (image) => {
-    const analysisTemplates = {
-      skin: {
-        findings: [
-          'Normal skin texture and color',
-          'No visible lesions or abnormalities',
-          'Good skin hydration',
-          'No signs of inflammation'
-        ],
-        concerns: [],
-        recommendations: [
-          'Continue regular skin care routine',
-          'Use sunscreen for UV protection',
-          'Monitor for any changes'
-        ],
-        confidence: 94,
-        riskLevel: 'low'
-      },
-      eye: {
-        findings: [
-          'Clear conjunctiva',
-          'Normal pupil size and reactivity',
-          'No visible discharge',
-          'Good eye movement'
-        ],
-        concerns: [],
-        recommendations: [
-          'Maintain good eye hygiene',
-          'Regular eye examinations',
-          'Protect eyes from strain'
-        ],
-        confidence: 96,
-        riskLevel: 'low'
-      },
-      wound: {
-        findings: [
-          'Clean wound edges',
-          'Good granulation tissue',
-          'No signs of infection',
-          'Appropriate healing progress'
-        ],
-        concerns: [],
-        recommendations: [
-          'Continue current wound care',
-          'Keep wound clean and dry',
-          'Monitor for signs of infection',
-          'Follow-up in 1 week'
-        ],
-        confidence: 91,
-        riskLevel: 'low'
-      }
-    };
-
-    return analysisTemplates[image.type] || analysisTemplates.skin;
-  };
-
-  const addMeasurement = (startX, startY, endX, endY) => {
-    const measurement = {
-      id: Date.now(),
-      startX,
-      startY,
-      endX,
-      endY,
-      length: Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2)),
-      unit: 'pixels',
-      timestamp: new Date().toISOString()
-    };
-
-    setMeasurements(prev => [...prev, measurement]);
-  };
-
-  const deleteImage = (imageId) => {
-    setCapturedImages(prev => prev.filter(img => img.id !== imageId));
-    if (selectedImage?.id === imageId) {
-      setSelectedImage(null);
-      setAnalysisResults(null);
-    }
-    toast.success('Image deleted');
-  };
-
-  const exportImage = (image) => {
-    const link = document.createElement('a');
-    link.download = `inspection_${image.type}_${new Date(image.timestamp).toISOString().split('T')[0]}.jpg`;
-    link.href = image.dataUrl;
-    link.click();
-    toast.success('Image exported');
-  };
-
-  const saveInspectionReport = () => {
-    const report = {
-      id: Date.now(),
-      patient: patientInfo,
-      inspectionType,
-      images: capturedImages,
-      recordings,
-      notes: inspectionNotes,
-      timestamp: new Date().toISOString(),
-      examiner: user?.name || 'Doctor'
-    };
-
-    localStorage.setItem('inspectionReports', JSON.stringify([
-      ...JSON.parse(localStorage.getItem('inspectionReports') || '[]'),
-      report
-    ]));
-
-    addMedicalRecord({
-      type: 'inspection_report',
-      data: report,
-      timestamp: new Date().toISOString()
     });
-
-    toast.success('Inspection report saved successfully');
+    setAnalyzing(false);
+    toast.success('Visual analysis complete');
   };
 
-  const currentInspection = inspectionTypes.find(type => type.id === inspectionType);
+  const severityColors = {
+    high: 'bg-red-50 border-red-200 text-red-700',
+    moderate: 'bg-amber-50 border-amber-200 text-amber-700',
+    low: 'bg-green-50 border-green-200 text-green-700',
+    info: 'bg-blue-50 border-blue-200 text-blue-700',
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 pt-24 pb-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <div className="flex items-center justify-center space-x-3 mb-6">
-            <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl flex items-center justify-center shadow-xl">
-              <Camera className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900">Visual Inspection</h1>
-              <p className="text-xl text-gray-600">Real-time Camera-based Medical Examination</p>
-            </div>
-          </div>
-        </motion.div>
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-1"><span className="section-label">Diagnostics</span><span className="text-[#CBD5E1] text-xs">·</span><span className="section-label">Visual AI</span></div>
+        <h1 className="font-display text-3xl font-bold text-[#0F172A]">Visual Inspection</h1>
+        <p className="text-[#64748B] mt-1 text-sm">AI-powered visual analysis of clinical images and findings</p>
+      </div>
 
-        <div className="grid lg:grid-cols-4 gap-6">
-          {/* Left Panel - Controls & Settings */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Patient Information */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Patient Information</h3>
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Patient Name"
-                  value={patientInfo.name}
-                  onChange={(e) => setPatientInfo(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                />
-                <input
-                  type="number"
-                  placeholder="Age"
-                  value={patientInfo.age}
-                  onChange={(e) => setPatientInfo(prev => ({ ...prev, age: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                />
-                <input
-                  type="text"
-                  placeholder="Body Part/Area"
-                  value={patientInfo.bodyPart}
-                  onChange={(e) => setPatientInfo(prev => ({ ...prev, bodyPart: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                />
-                <textarea
-                  placeholder="Symptoms/Concerns"
-                  value={patientInfo.symptoms}
-                  onChange={(e) => setPatientInfo(prev => ({ ...prev, symptoms: e.target.value }))}
-                  rows="3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                />
-              </div>
-            </div>
-
-            {/* Inspection Type */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Inspection Type</h3>
-              <div className="space-y-2">
-                {inspectionTypes.map(type => (
-                  <button
-                    key={type.id}
-                    onClick={() => setInspectionType(type.id)}
-                    className={`w-full text-left p-3 rounded-lg transition-colors ${
-                      inspectionType === type.id
-                        ? 'bg-purple-100 border-purple-300 text-purple-800'
-                        : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-                    } border`}
-                  >
-                    <div className="font-medium">{type.name}</div>
-                    <div className="text-sm text-gray-600">{type.description}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Camera Controls */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Camera Controls</h3>
-              <div className="space-y-4">
-                <div className="flex space-x-2">
-                  <button
-                    onClick={isStreaming ? stopCamera : startCamera}
-                    className={`flex-1 py-3 px-4 rounded-lg text-white transition-colors ${
-                      isStreaming ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
-                    }`}
-                  >
-                    {isStreaming ? (
-                      <>
-                        <VideoOff className="w-4 h-4 inline mr-2" />
-                        Stop Camera
-                      </>
-                    ) : (
-                      <>
-                        <Video className="w-4 h-4 inline mr-2" />
-                        Start Camera
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {isStreaming && (
-                  <>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={captureImage}
-                        className="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors"
-                      >
-                        <Camera className="w-4 h-4 inline mr-2" />
-                        Capture
-                      </button>
-                      <button
-                        onClick={isRecording ? stopRecording : startRecording}
-                        className={`flex-1 py-2 px-4 rounded-lg text-white transition-colors ${
-                          isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-purple-500 hover:bg-purple-600'
-                        }`}
-                      >
-                        {isRecording ? (
-                          <>
-                            <Square className="w-4 h-4 inline mr-2" />
-                            Stop
-                          </>
-                        ) : (
-                          <>
-                            <Play className="w-4 h-4 inline mr-2" />
-                            Record
-                          </>
-                        )}
-                      </button>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Camera Mode</label>
-                      <select
-                        value={cameraSettings.facingMode}
-                        onChange={(e) => setCameraSettings(prev => ({ ...prev, facingMode: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                      >
-                        <option value="environment">Back Camera</option>
-                        <option value="user">Front Camera</option>
-                      </select>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Inspection Guidelines */}
-            {currentInspection && (
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <h3 className="font-semibold text-gray-900 mb-4">Inspection Guidelines</h3>
-                <div className="space-y-3">
-                  <h4 className="font-medium text-purple-800">{currentInspection.name}</h4>
-                  <p className="text-sm text-gray-600">{currentInspection.description}</p>
-                  
-                  <div>
-                    <h5 className="font-medium text-gray-700 mb-2">Guidelines:</h5>
-                    <ul className="space-y-1">
-                      {currentInspection.guidelines.map((guideline, index) => (
-                        <li key={index} className="text-sm text-gray-600 flex items-start">
-                          <CheckCircle className="w-3 h-3 text-green-500 mt-1 mr-2 flex-shrink-0" />
-                          {guideline}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h5 className="font-medium text-gray-700 mb-2">Common Findings:</h5>
-                    <div className="flex flex-wrap gap-1">
-                      {currentInspection.commonFindings.map((finding, index) => (
-                        <span
-                          key={index}
-                          className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs"
-                        >
-                          {finding}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Center Panel - Camera & Video */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <div className="space-y-4">
-                {/* Video Display */}
-                <div className="relative bg-gray-900 rounded-2xl overflow-hidden aspect-video">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full h-full object-cover"
-                  />
-                  <canvas
-                    ref={canvasRef}
-                    className="hidden"
-                  />
-                  
-                  {/* Recording Indicator */}
-                  {isRecording && (
-                    <div className="absolute top-4 left-4 flex items-center space-x-2 bg-red-500 text-white px-3 py-1 rounded-full">
-                      <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                      <span className="text-sm font-medium">REC</span>
-                    </div>
-                  )}
-
-                  {/* Camera Status */}
-                  {!isStreaming && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center text-white">
-                        <Camera className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                        <p className="text-lg font-medium">Camera Not Active</p>
-                        <p className="text-gray-300">Click "Start Camera" to begin inspection</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Inspection Type Overlay */}
-                  {isStreaming && (
-                    <div className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
-                      {currentInspection?.name}
-                    </div>
-                  )}
-                </div>
-
-                {/* Notes */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Inspection Notes</label>
-                  <textarea
-                    value={inspectionNotes}
-                    onChange={(e) => setInspectionNotes(e.target.value)}
-                    placeholder="Document your observations, findings, and notes during the examination..."
-                    rows="4"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                  />
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex space-x-4">
-                  <button
-                    onClick={saveInspectionReport}
-                    className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors flex items-center space-x-2"
-                  >
-                    <Save className="w-5 h-5" />
-                    <span>Save Report</span>
-                  </button>
-                  <button
-                    onClick={() => toast.info('Export functionality will generate PDF report')}
-                    className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors flex items-center space-x-2"
-                  >
-                    <Download className="w-5 h-5" />
-                    <span>Export</span>
-                  </button>
-                  <button
-                    onClick={() => toast.info('Share functionality will send to EMR system')}
-                    className="bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-600 transition-colors flex items-center space-x-2"
-                  >
-                    <Share className="w-5 h-5" />
-                    <span>Share</span>
-                  </button>
-                </div>
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-4">
+          {/* Analysis Type Selection */}
+          <div className="card">
+            <div className="section-label mb-3">Analysis Type</div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {ANALYSIS_TYPES.map(type => (
+                <button key={type.id} onClick={() => setAnalysisType(type.id)}
+                  className={`p-3 rounded-lg border text-left transition-colors ${analysisType === type.id ? 'border-[#1E40AF] bg-[#EFF6FF]' : 'border-[#E2E8F0] hover:border-[#1E40AF]'}`}>
+                  <type.icon className={`w-4 h-4 mb-1.5 ${analysisType === type.id ? 'text-[#1E40AF]' : 'text-[#64748B]'}`} />
+                  <div className={`text-xs font-medium ${analysisType === type.id ? 'text-[#1E40AF]' : 'text-[#0F172A]'}`}>{type.label}</div>
+                  <div className="text-[10px] text-[#94A3B8] mt-0.5">{type.description}</div>
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Right Panel - Captured Images & Analysis */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Captured Images */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">
-                Captured Images ({capturedImages.length})
-              </h3>
-              
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {capturedImages.map((image) => (
-                  <div
-                    key={image.id}
-                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                      selectedImage?.id === image.id
-                        ? 'border-purple-300 bg-purple-50'
-                        : 'border-gray-200 hover:bg-gray-50'
-                    }`}
-                    onClick={() => setSelectedImage(image)}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <img
-                        src={image.dataUrl}
-                        alt={`${image.type} inspection`}
-                        className="w-12 h-12 object-cover rounded"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 text-sm capitalize">{image.type}</p>
-                        <p className="text-xs text-gray-500">
-                          {new Date(image.timestamp).toLocaleString()}
-                        </p>
-                        {image.analysis && (
-                          <div className="flex items-center space-x-1 mt-1">
-                            <CheckCircle className="w-3 h-3 text-green-500" />
-                            <span className="text-xs text-green-600">Analyzed</span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex space-x-1">
-                        {!image.analysis && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              analyzeImage(image);
-                            }}
-                            disabled={isAnalyzing}
-                            className="p-1 text-blue-600 hover:bg-blue-100 rounded"
-                          >
-                            <Search className="w-3 h-3" />
-                          </button>
-                        )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            exportImage(image);
-                          }}
-                          className="p-1 text-green-600 hover:bg-green-100 rounded"
-                        >
-                          <Download className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteImage(image.id);
-                          }}
-                          className="p-1 text-red-600 hover:bg-red-100 rounded"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
+          {/* Image Upload / Display */}
+          {!image ? (
+            <div {...getRootProps()} className={`card border-2 border-dashed min-h-[300px] flex items-center justify-center text-center cursor-pointer transition-colors ${isDragActive ? 'border-[#1E40AF] bg-[#EFF6FF]' : 'border-[#CBD5E1] hover:border-[#1E40AF]'}`}>
+              <input {...getInputProps()} />
+              <div>
+                <FileImage className={`w-12 h-12 mx-auto mb-4 ${isDragActive ? 'text-[#1E40AF]' : 'text-[#94A3B8]'}`} />
+                <h3 className="font-semibold text-[#0F172A] mb-2">Upload Clinical Image</h3>
+                <p className="text-sm text-[#64748B] mb-4">Drag & drop or click to upload<br />JPG, PNG, HEIC · Max 10MB</p>
+                <div className="flex gap-3 justify-center">
+                  <button className="btn-primary text-sm">Browse Files</button>
+                  <button onClick={e => { e.stopPropagation(); toast.info('Camera access...'); }} className="btn-secondary text-sm flex items-center gap-1"><Camera className="w-3.5 h-3.5" />Use Camera</button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="card p-0 overflow-hidden">
+              <div className="relative bg-[#0F172A] flex items-center justify-center" style={{ minHeight: '300px' }}>
+                <img src={image} alt="Clinical" className="max-h-80 object-contain transition-transform duration-200" style={{ transform: `scale(${zoom}) rotate(0deg)` }} />
+                {analyzing && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <div className="text-center text-white">
+                      <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                      <div className="text-sm font-medium">Analyzing image...</div>
                     </div>
-                  </div>
-                ))}
-
-                {capturedImages.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
-                    <Camera className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p className="text-sm">No images captured yet</p>
                   </div>
                 )}
+                {/* Toolbar */}
+                <div className="absolute top-3 right-3 flex gap-1.5">
+                  <button onClick={() => setZoom(z => Math.min(3, z + 0.25))} className="p-1.5 bg-white/20 text-white rounded-lg hover:bg-white/40 backdrop-blur-sm"><ZoomIn className="w-4 h-4" /></button>
+                  <button onClick={() => setZoom(z => Math.max(0.5, z - 0.25))} className="p-1.5 bg-white/20 text-white rounded-lg hover:bg-white/40 backdrop-blur-sm"><ZoomOut className="w-4 h-4" /></button>
+                  <button onClick={() => setZoom(1)} className="p-1.5 bg-white/20 text-white rounded-lg hover:bg-white/40 backdrop-blur-sm"><Maximize className="w-4 h-4" /></button>
+                  <button onClick={() => { setImage(null); setResults(null); }} className="p-1.5 bg-red-500/70 text-white rounded-lg hover:bg-red-500 backdrop-blur-sm"><X className="w-4 h-4" /></button>
+                </div>
+              </div>
+              <div className="p-4 flex gap-2 border-t border-[#E2E8F0]">
+                <button onClick={analyze} disabled={analyzing} className="btn-primary flex items-center gap-2 disabled:opacity-40">
+                  <Eye className="w-4 h-4" />{analyzing ? 'Analyzing...' : 'Analyze Image'}
+                </button>
+                <button onClick={() => { setImage(null); setResults(null); }} className="btn-secondary">Upload New</button>
+                <button onClick={() => toast.info('Downloading...')} className="btn-secondary ml-auto flex items-center gap-2"><Download className="w-4 h-4" />Save</button>
               </div>
             </div>
+          )}
+        </div>
 
-            {/* Analysis Results */}
-            {analysisResults ? (
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <h3 className="font-semibold text-gray-900 mb-4">AI Analysis Results</h3>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Confidence</span>
-                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-medium">
-                      {analysisResults.confidence}%
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Risk Level</span>
-                    <span className={`px-2 py-1 rounded-full text-sm font-medium ${
-                      analysisResults.riskLevel === 'low' ? 'bg-green-100 text-green-800' :
-                      analysisResults.riskLevel === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {analysisResults.riskLevel.toUpperCase()}
-                    </span>
-                  </div>
-
+        <div className="space-y-4">
+          {!results ? (
+            <>
+              <div className="card">
+                <div className="section-label mb-3">Clinical Notes</div>
+                <textarea className="input h-32 resize-none text-sm" placeholder="Add clinical observations, context, patient history..." value={notes} onChange={e => setNotes(e.target.value)} />
+              </div>
+              <div className="card bg-blue-50 border-blue-200">
+                <div className="flex gap-2">
+                  <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Findings</h4>
-                    <ul className="space-y-1">
-                      {analysisResults.findings.map((finding, index) => (
-                        <li key={index} className="text-sm text-gray-700 flex items-start">
-                          <CheckCircle className="w-3 h-3 text-green-500 mt-1 mr-2 flex-shrink-0" />
-                          {finding}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {analysisResults.concerns.length > 0 && (
-                    <div>
-                      <h4 className="font-medium text-red-800 mb-2 flex items-center">
-                        <AlertTriangle className="w-4 h-4 mr-1" />
-                        Concerns
-                      </h4>
-                      <ul className="space-y-1">
-                        {analysisResults.concerns.map((concern, index) => (
-                          <li key={index} className="text-sm text-red-700 flex items-start">
-                            <AlertTriangle className="w-3 h-3 text-red-500 mt-1 mr-2 flex-shrink-0" />
-                            {concern}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Recommendations</h4>
-                    <ul className="space-y-1">
-                      {analysisResults.recommendations.map((rec, index) => (
-                        <li key={index} className="text-sm text-gray-700 flex items-start">
-                          <CheckCircle className="w-3 h-3 text-blue-500 mt-1 mr-2 flex-shrink-0" />
-                          {rec}
-                        </li>
-                      ))}
+                    <div className="text-xs font-medium text-blue-800 mb-1">AI Visual Analysis</div>
+                    <ul className="text-xs text-blue-700 space-y-1">
+                      <li>• Analyzes clinical images for diagnostic patterns</li>
+                      <li>• Identifies lesion characteristics and measurements</li>
+                      <li>• Provides evidence-based recommendations</li>
+                      <li>• Always verify findings clinically</li>
                     </ul>
                   </div>
                 </div>
               </div>
-            ) : isAnalyzing ? (
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <div className="text-center">
-                  <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-gray-600">Analyzing image...</p>
+            </>
+          ) : (
+            <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
+              <div className="card">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-semibold text-[#0F172A]">Analysis Results</h2>
+                  <span className={`text-xs px-2 py-0.5 rounded border font-medium ${results.overallRisk === 'high' ? 'bg-red-100 text-red-700 border-red-200' : results.overallRisk === 'moderate' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-green-100 text-green-700 border-green-200'}`}>{results.overallRisk} risk</span>
                 </div>
-              </div>
-            ) : (
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <div className="text-center py-8 text-gray-500">
-                  <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-sm">Select an image and click analyze for AI insights</p>
-                </div>
-              </div>
-            )}
-
-            {/* Recordings */}
-            {recordings.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <h3 className="font-semibold text-gray-900 mb-4">Recordings ({recordings.length})</h3>
-                
-                <div className="space-y-3">
-                  {recordings.map((recording) => (
-                    <div key={recording.id} className="p-3 border border-gray-200 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-gray-900 text-sm capitalize">{recording.type}</p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(recording.timestamp).toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="flex space-x-1">
-                          <button
-                            onClick={() => {
-                              const link = document.createElement('a');
-                              link.href = recording.url;
-                              link.download = `inspection_${recording.type}_${new Date(recording.timestamp).toISOString().split('T')[0]}.webm`;
-                              link.click();
-                            }}
-                            className="p-1 text-green-600 hover:bg-green-100 rounded"
-                          >
-                            <Download className="w-3 h-3" />
-                          </button>
-                        </div>
+                <div className="space-y-2 mb-4">
+                  {results.findings.map((finding, i) => (
+                    <div key={i} className={`p-3 rounded-lg border ${severityColors[finding.severity]}`}>
+                      <div className="flex items-start justify-between">
+                        <div className="text-sm font-medium">{finding.finding}</div>
+                        <span className="text-[10px] ml-2 flex-shrink-0">{finding.confidence}%</span>
                       </div>
+                      <div className="text-xs mt-1 opacity-80">{finding.action}</div>
                     </div>
                   ))}
                 </div>
+                <div className="p-3 bg-[#F8FAFC] rounded-lg border border-[#E2E8F0]">
+                  <div className="text-xs font-medium text-[#0F172A] mb-1">Clinical Recommendation</div>
+                  <p className="text-xs text-[#64748B]">{results.recommendation}</p>
+                </div>
               </div>
-            )}
-          </div>
+              <div className="flex gap-2">
+                <button onClick={() => toast.info('Saving report...')} className="btn-primary flex-1 text-sm flex items-center justify-center gap-1"><Download className="w-3.5 h-3.5" />Save Report</button>
+                <button onClick={() => setResults(null)} className="btn-secondary text-sm px-3">Reset</button>
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
     </div>
   );
-};
-
-export default VisualInspection;
+}

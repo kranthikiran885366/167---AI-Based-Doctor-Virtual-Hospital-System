@@ -77,9 +77,11 @@ const sections = [
     key: 'consult',
     label: 'Consultation',
     items: [
-      { name: 'Video Consultation', href: '/consultation-modes', icon: Video },
+      { name: 'Video Call', href: '/video-consultation', icon: Video },
+      { name: 'Consultation Modes', href: '/consultation-modes', icon: PhoneCall },
       { name: 'Emergency', href: '/emergency', icon: AlertTriangle, urgent: true },
-      { name: 'Collaboration', href: '/collaboration', icon: MessageSquare },
+      { name: 'Doctor Collaboration', href: '/doctor-collaboration', icon: MessageSquare },
+      { name: 'Collaboration', href: '/collaboration', icon: Users },
       { name: 'Doctor Dashboard', href: '/doctor-dashboard', icon: Stethoscope },
     ]
   },
@@ -88,8 +90,11 @@ const sections = [
     label: 'Treatment',
     items: [
       { name: 'Prescriptions', href: '/prescription', icon: Pill },
+      { name: 'Advanced Rx', href: '/advanced-prescription', icon: Pill },
       { name: 'Examination', href: '/examination-features', icon: Activity },
+      { name: 'Full Examination', href: '/comprehensive-examination', icon: Activity },
       { name: 'Documentation', href: '/medical-documentation', icon: ClipboardList },
+      { name: 'Calculators', href: '/medical-calculators', icon: TrendingUp },
     ]
   },
   {
@@ -98,7 +103,8 @@ const sections = [
     items: [
       { name: 'Admin Panel', href: '/admin', icon: UserCog },
       { name: 'Compliance', href: '/admin-compliance', icon: Shield },
-      { name: 'Finance', href: '/finance-earnings', icon: DollarSign },
+      { name: 'Finance & Earnings', href: '/finance-earnings', icon: DollarSign },
+      { name: 'Billing', href: '/billing-finance', icon: CreditCard },
       { name: 'Security', href: '/security-privacy', icon: Lock },
     ]
   },
@@ -109,6 +115,7 @@ const sections = [
       { name: 'Micro Functions', href: '/micro-functionalities', icon: Zap },
       { name: 'Bookmarks', href: '/bookmarks', icon: Bookmark },
       { name: 'History', href: '/history', icon: Clock },
+      { name: 'Doctor Profile', href: '/doctor-profile', icon: UserCheck },
       { name: 'Profile', href: '/profile', icon: Settings },
     ]
   }

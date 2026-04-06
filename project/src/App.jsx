@@ -35,6 +35,12 @@ import History from './pages/History.jsx';
 import Login from './pages/Login.jsx';
 import AdminPanel from './pages/AdminPanel.jsx';
 import ExamPortal from './pages/ExamPortal.jsx';
+import BillingFinance from './pages/BillingFinance.jsx';
+import DoctorCollaboration from './pages/DoctorCollaboration.jsx';
+import VideoConsultation from './pages/VideoConsultation.jsx';
+import MedicalCalculators from './pages/MedicalCalculators.jsx';
+import AdvancedPrescription from './pages/AdvancedPrescription.jsx';
+import ComprehensiveExamination from './pages/ComprehensiveExamination.jsx';
 import { UserProvider } from './context/UserContext.jsx';
 import { LayoutProvider, useLayout } from './context/LayoutContext.jsx';
 import LoadingSpinner from './components/LoadingSpinner.jsx';
@@ -169,6 +175,12 @@ function MainContent() {
             <Route path="/bookmarks" element={<PageWrapper><Bookmarks /></PageWrapper>} />
             <Route path="/history" element={<PageWrapper><History /></PageWrapper>} />
             <Route path="/admin" element={<PageWrapper><AdminPanel /></PageWrapper>} />
+            <Route path="/billing-finance" element={<PageWrapper><BillingFinance /></PageWrapper>} />
+            <Route path="/doctor-collaboration" element={<PageWrapper><DoctorCollaboration /></PageWrapper>} />
+            <Route path="/video-consultation" element={<PageWrapper><VideoConsultation /></PageWrapper>} />
+            <Route path="/medical-calculators" element={<PageWrapper><MedicalCalculators /></PageWrapper>} />
+            <Route path="/advanced-prescription" element={<PageWrapper><AdvancedPrescription /></PageWrapper>} />
+            <Route path="/comprehensive-examination" element={<PageWrapper><ComprehensiveExamination /></PageWrapper>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AnimatePresence>

@@ -1,487 +1,140 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  History as HistoryIcon, 
-  Clock, 
-  Calendar, 
-  Search, 
-  Filter, 
-  Download, 
-  Eye, 
-  MoreVertical, 
-  User, 
-  Video, 
-  Phone, 
-  MessageSquare, 
-  FileText, 
-  Activity,
-  LogIn,
-  LogOut,
-  Settings,
-  CheckCircle,
-  AlertTriangle,
-  XCircle,
-  Trash2,
-  Archive,
-  RefreshCw,
-  BarChart3,
-  TrendingUp,
-  Users
-} from 'lucide-react';
+import { Clock, Search, Calendar, FileText, Pill, Activity, Brain, Video, User, Filter, ChevronRight, Download, Eye, Trash2 } from 'lucide-react';
+import { toast } from 'react-toastify';
+import { useUser } from '../context/UserContext.jsx';
 
-const History = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState('week');
-  const [selectedType, setSelectedType] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
+const ALL_HISTORY = [
+  { id: 1, type: 'consultation', title: 'Cardiology Consultation', date: '2026-04-07', doctor: 'Dr. Sarah Chen', notes: 'Blood pressure evaluated. New medication prescribed.', icon: User, color: 'bg-blue-100 text-blue-600' },
+  { id: 2, type: 'prescription', title: 'Prescription — Lisinopril 10mg', date: '2026-04-07', doctor: 'Dr. Sarah Chen', notes: 'Once daily for hypertension management.', icon: Pill, color: 'bg-green-100 text-green-600' },
+  { id: 3, type: 'lab', title: 'CBC + Comprehensive Metabolic Panel', date: '2026-04-06', doctor: 'Lab Department', notes: 'All values within normal range.', icon: Activity, color: 'bg-purple-100 text-purple-600' },
+  { id: 4, type: 'ai_diagnosis', title: 'AI Symptom Analysis', date: '2026-04-05', doctor: 'AI System', notes: 'Differential diagnosis: Hypertension, Anxiety, Stress.', icon: Brain, color: 'bg-amber-100 text-amber-600' },
+  { id: 5, type: 'consultation', title: 'Telemedicine Follow-up', date: '2026-03-28', doctor: 'Dr. User', notes: 'Routine follow-up. Patient stable.', icon: Video, color: 'bg-indigo-100 text-indigo-600' },
+  { id: 6, type: 'lab', title: 'HbA1c Report', date: '2026-03-20', doctor: 'Lab Department', notes: 'HbA1c 7.2% — slightly elevated.', icon: Activity, color: 'bg-red-100 text-red-600' },
+  { id: 7, type: 'prescription', title: 'Prescription — Metformin 500mg', date: '2026-03-20', doctor: 'Dr. User', notes: 'Twice daily with meals.', icon: Pill, color: 'bg-green-100 text-green-600' },
+];
 
-  const [activities] = useState([
-    {
-      id: 1,
-      type: 'consultation',
-      action: 'Video consultation completed',
-      details: 'Patient: Sarah Johnson - Diabetes follow-up',
-      timestamp: '2024-01-18T14:30:00',
-      duration: 30,
-      status: 'completed',
-      patient: 'Sarah Johnson',
-      sessionId: 'VID-2024-001'
-    },
-    {
-      id: 2,
-      type: 'login',
-      action: 'User logged in',
-      details: 'Successful authentication from Chrome browser',
-      timestamp: '2024-01-18T08:00:00',
-      duration: null,
-      status: 'success',
-      patient: null,
-      sessionId: null
-    },
-    {
-      id: 3,
-      type: 'document',
-      action: 'Medical record updated',
-      details: 'Updated SOAP notes for Michael Chen',
-      timestamp: '2024-01-17T16:45:00',
-      duration: null,
-      status: 'completed',
-      patient: 'Michael Chen',
-      sessionId: 'DOC-2024-015'
-    },
-    {
-      id: 4,
-      type: 'consultation',
-      action: 'Audio consultation',
-      details: 'Patient: Emma Wilson - Asthma management',
-      timestamp: '2024-01-17T11:15:00',
-      duration: 20,
-      status: 'completed',
-      patient: 'Emma Wilson',
-      sessionId: 'AUD-2024-008'
-    },
-    {
-      id: 5,
-      type: 'prescription',
-      action: 'Prescription generated',
-      details: 'Digital prescription for David Brown',
-      timestamp: '2024-01-17T09:30:00',
-      duration: null,
-      status: 'completed',
-      patient: 'David Brown',
-      sessionId: 'RX-2024-042'
-    },
-    {
-      id: 6,
-      type: 'emergency',
-      action: 'Emergency consultation',
-      details: 'Patient: John Smith - Chest pain assessment',
-      timestamp: '2024-01-16T22:15:00',
-      duration: 45,
-      status: 'completed',
-      patient: 'John Smith',
-      sessionId: 'EMG-2024-003'
-    },
-    {
-      id: 7,
-      type: 'settings',
-      action: 'Profile settings updated',
-      details: 'Updated consultation fees and availability',
-      timestamp: '2024-01-16T14:20:00',
-      duration: null,
-      status: 'completed',
-      patient: null,
-      sessionId: null
-    },
-    {
-      id: 8,
-      type: 'collaboration',
-      action: 'Specialist referral sent',
-      details: 'Referred patient to Dr. Emily Carter (Cardiology)',
-      timestamp: '2024-01-16T10:00:00',
-      duration: null,
-      status: 'pending',
-      patient: 'Lisa Thompson',
-      sessionId: 'REF-2024-012'
-    }
-  ]);
+const TYPES = ['All', 'consultation', 'prescription', 'lab', 'ai_diagnosis'];
 
-  const [statistics] = useState({
-    totalSessions: 127,
-    consultationHours: 89.5,
-    documentsCreated: 156,
-    averageSessionTime: 28,
-    thisWeek: {
-      consultations: 18,
-      hours: 12.5,
-      documents: 22,
-      logins: 8
-    }
+export default function History() {
+  const { medicalHistory, prescriptions } = useUser();
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('All');
+  const [dateRange, setDateRange] = useState('all');
+
+  const allHistory = [...ALL_HISTORY, ...medicalHistory.map((h, i) => ({
+    id: `user-${i}`,
+    type: h.type || 'consultation',
+    title: h.type?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || 'Medical Record',
+    date: new Date(h.timestamp).toISOString().split('T')[0],
+    doctor: 'Dr. User',
+    notes: 'Patient record',
+    icon: FileText,
+    color: 'bg-gray-100 text-gray-600',
+  }))];
+
+  const filtered = allHistory.filter(h => {
+    const matchSearch = h.title.toLowerCase().includes(search.toLowerCase()) || h.doctor.toLowerCase().includes(search.toLowerCase());
+    const matchFilter = filter === 'All' || h.type === filter;
+    return matchSearch && matchFilter;
   });
 
-  const activityTypes = [
-    { id: 'all', name: 'All Activities', icon: HistoryIcon },
-    { id: 'consultation', name: 'Consultations', icon: Video },
-    { id: 'document', name: 'Documents', icon: FileText },
-    { id: 'prescription', name: 'Prescriptions', icon: FileText },
-    { id: 'emergency', name: 'Emergency', icon: AlertTriangle },
-    { id: 'collaboration', name: 'Collaboration', icon: Users },
-    { id: 'login', name: 'Login/Logout', icon: LogIn },
-    { id: 'settings', name: 'Settings', icon: Settings }
-  ];
-
-  const getActivityIcon = (type) => {
-    switch (type) {
-      case 'consultation': return Video;
-      case 'document': return FileText;
-      case 'prescription': return FileText;
-      case 'emergency': return AlertTriangle;
-      case 'collaboration': return Users;
-      case 'login': return LogIn;
-      case 'logout': return LogOut;
-      case 'settings': return Settings;
-      default: return Activity;
-    }
-  };
-
-  const getActivityColor = (type) => {
-    switch (type) {
-      case 'consultation': return 'bg-blue-100 text-blue-600';
-      case 'document': return 'bg-green-100 text-green-600';
-      case 'prescription': return 'bg-purple-100 text-purple-600';
-      case 'emergency': return 'bg-red-100 text-red-600';
-      case 'collaboration': return 'bg-orange-100 text-orange-600';
-      case 'login': return 'bg-gray-100 text-gray-600';
-      case 'logout': return 'bg-gray-100 text-gray-600';
-      case 'settings': return 'bg-yellow-100 text-yellow-600';
-      default: return 'bg-gray-100 text-gray-600';
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'completed': case 'success': return 'text-green-600 bg-green-100';
-      case 'pending': return 'text-yellow-600 bg-yellow-100';
-      case 'failed': case 'error': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
-
-  const formatTimestamp = (timestamp) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffTime = Math.abs(now - date);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 1) return 'Today';
-    if (diffDays === 2) return 'Yesterday';
-    if (diffDays <= 7) return `${diffDays - 1} days ago`;
-    return date.toLocaleDateString();
-  };
-
-  const formatTime = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const filteredActivities = activities.filter(activity => {
-    const matchesType = selectedType === 'all' || activity.type === selectedType;
-    const matchesSearch = activity.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         activity.details.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (activity.patient && activity.patient.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesType && matchesSearch;
-  });
-
-  // Group activities by date
-  const groupedActivities = filteredActivities.reduce((groups, activity) => {
-    const date = formatTimestamp(activity.timestamp);
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(activity);
-    return groups;
+  const grouped = filtered.reduce((acc, h) => {
+    const month = new Date(h.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+    if (!acc[month]) acc[month] = [];
+    acc[month].push(h);
+    return acc;
   }, {});
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pt-20 pb-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Activity History
-          </h1>
-          <p className="text-xl text-gray-600 max-w-3xl">
-            Track your platform activity, session logs, and access history for complete accountability.
-          </p>
-        </motion.div>
+    <div className="p-6 max-w-5xl mx-auto">
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-1"><span className="section-label">Records</span><span className="text-[#CBD5E1] text-xs">·</span><span className="section-label">Activity</span></div>
+        <h1 className="font-display text-3xl font-bold text-[#0F172A]">Medical History</h1>
+        <p className="text-[#64748B] mt-1 text-sm">Complete timeline of your medical activity and records</p>
+      </div>
 
-        {/* Statistics Overview */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-        >
-          <div className="bg-white rounded-2xl p-6 shadow-lg">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {[
+          { label: 'Total Records', value: allHistory.length, icon: FileText, color: 'text-[#1E40AF]', bg: 'bg-[#EFF6FF]' },
+          { label: 'Consultations', value: allHistory.filter(h => h.type === 'consultation').length, icon: User, color: 'text-green-600', bg: 'bg-green-50' },
+          { label: 'Prescriptions', value: allHistory.filter(h => h.type === 'prescription').length + prescriptions.length, icon: Pill, color: 'text-purple-600', bg: 'bg-purple-50' },
+          { label: 'Lab Reports', value: allHistory.filter(h => h.type === 'lab').length, icon: Activity, color: 'text-amber-600', bg: 'bg-amber-50' },
+        ].map((s, i) => (
+          <div key={i} className="card">
             <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <Video className="w-6 h-6 text-blue-600" />
+              <div>
+                <div className="text-2xl font-bold text-[#0F172A]">{s.value}</div>
+                <div className="text-xs text-[#64748B] mt-0.5">{s.label}</div>
               </div>
-              <TrendingUp className="w-5 h-5 text-green-600" />
-            </div>
-            <div className="mt-4">
-              <div className="text-3xl font-bold text-gray-900">{statistics.totalSessions}</div>
-              <div className="text-sm text-gray-600">Total Sessions</div>
-              <div className="text-xs text-green-600 mt-1">+{statistics.thisWeek.consultations} this week</div>
+              <div className={`w-9 h-9 rounded-xl ${s.bg} flex items-center justify-center`}><s.icon className={`w-4 h-4 ${s.color}`} /></div>
             </div>
           </div>
+        ))}
+      </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <Clock className="w-6 h-6 text-green-600" />
-              </div>
-              <BarChart3 className="w-5 h-5 text-blue-600" />
-            </div>
-            <div className="mt-4">
-              <div className="text-3xl font-bold text-gray-900">{statistics.consultationHours}h</div>
-              <div className="text-sm text-gray-600">Consultation Hours</div>
-              <div className="text-xs text-blue-600 mt-1">+{statistics.thisWeek.hours}h this week</div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                <FileText className="w-6 h-6 text-purple-600" />
-              </div>
-              <Activity className="w-5 h-5 text-purple-600" />
-            </div>
-            <div className="mt-4">
-              <div className="text-3xl font-bold text-gray-900">{statistics.documentsCreated}</div>
-              <div className="text-sm text-gray-600">Documents Created</div>
-              <div className="text-xs text-purple-600 mt-1">+{statistics.thisWeek.documents} this week</div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-                <Users className="w-6 h-6 text-orange-600" />
-              </div>
-              <Clock className="w-5 h-5 text-orange-600" />
-            </div>
-            <div className="mt-4">
-              <div className="text-3xl font-bold text-gray-900">{statistics.averageSessionTime}m</div>
-              <div className="text-sm text-gray-600">Avg Session Time</div>
-              <div className="text-xs text-orange-600 mt-1">{statistics.thisWeek.logins} logins this week</div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Filters */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white p-6 rounded-2xl shadow-lg mb-8"
-        >
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="flex-1 relative max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search activities..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            
-            <div className="flex space-x-4">
-              <select
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="today">Today</option>
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="year">This Year</option>
-                <option value="all">All Time</option>
-              </select>
-              
-              <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                className="p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
-              >
-                {activityTypes.map(type => (
-                  <option key={type.id} value={type.id}>{type.name}</option>
-                ))}
-              </select>
-              
-              <button className="p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
-                <Download className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Activity Types Grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-8"
-        >
-          {activityTypes.map((type, index) => {
-            const Icon = type.icon;
-            const count = selectedType === 'all' 
-              ? activities.filter(a => a.type === type.id).length 
-              : filteredActivities.length;
-            
-            return (
-              <motion.button
-                key={type.id}
-                whileHover={{ y: -2 }}
-                onClick={() => setSelectedType(type.id)}
-                className={`p-4 rounded-2xl shadow-lg transition-all duration-300 ${
-                  selectedType === type.id
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-600 hover:bg-blue-50'
-                }`}
-              >
-                <Icon className="w-6 h-6 mx-auto mb-2" />
-                <div className="text-xs font-medium">{type.name}</div>
-                {type.id !== 'all' && (
-                  <div className="text-xs opacity-75 mt-1">
-                    {activities.filter(a => a.type === type.id).length}
-                  </div>
-                )}
-              </motion.button>
-            );
-          })}
-        </motion.div>
-
-        {/* Activity Timeline */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="space-y-8"
-        >
-          {Object.entries(groupedActivities).map(([date, activities], groupIndex) => (
-            <div key={date} className="bg-white rounded-2xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center space-x-2">
-                <Calendar className="w-5 h-5 text-blue-600" />
-                <span>{date}</span>
-                <span className="text-sm font-normal text-gray-500">({activities.length} activities)</span>
-              </h3>
-              
-              <div className="space-y-4">
-                {activities.map((activity, index) => {
-                  const ActivityIcon = getActivityIcon(activity.type);
-                  return (
-                    <motion.div
-                      key={activity.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: (groupIndex * 0.1) + (index * 0.05) }}
-                      className="flex items-start space-x-4 p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors"
-                    >
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${getActivityColor(activity.type)}`}>
-                        <ActivityIcon className="w-5 h-5" />
-                      </div>
-                      
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h4 className="font-semibold text-gray-900">{activity.action}</h4>
-                            <p className="text-sm text-gray-600 mt-1">{activity.details}</p>
-                            <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                              <span>{formatTime(activity.timestamp)}</span>
-                              {activity.duration && (
-                                <>
-                                  <span>•</span>
-                                  <span>{activity.duration} minutes</span>
-                                </>
-                              )}
-                              {activity.sessionId && (
-                                <>
-                                  <span>•</span>
-                                  <span>ID: {activity.sessionId}</span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center space-x-2">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(activity.status)}`}>
-                              {activity.status}
-                            </span>
-                            <button className="p-1 text-gray-400 hover:text-gray-600">
-                              <MoreVertical className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </motion.div>
-
-        {filteredActivities.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-12 bg-white rounded-2xl shadow-lg"
-          >
-            <HistoryIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No activities found</h3>
-            <p className="text-gray-600 mb-6">
-              {searchTerm ? 'Try adjusting your search terms or filters' : 'No activities recorded for the selected period'}
-            </p>
-            <button 
-              onClick={() => {
-                setSearchTerm('');
-                setSelectedType('all');
-                setSelectedPeriod('week');
-              }}
-              className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
-            >
-              Clear Filters
+      <div className="flex gap-3 mb-6 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+          <input className="input pl-9" placeholder="Search history..." value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {TYPES.map(t => (
+            <button key={t} onClick={() => setFilter(t)} className={`px-3 py-1.5 text-xs rounded-lg border capitalize font-medium transition-colors ${filter === t ? 'bg-[#1E40AF] text-white border-[#1E40AF]' : 'bg-white text-[#64748B] border-[#E2E8F0] hover:border-[#1E40AF]'}`}>
+              {t === 'ai_diagnosis' ? 'AI Analysis' : t}
             </button>
-          </motion.div>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-8">
+        {Object.entries(grouped).map(([month, records]) => (
+          <div key={month}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="section-label">{month}</div>
+              <div className="flex-1 h-px bg-[#E2E8F0]" />
+              <span className="text-xs text-[#94A3B8]">{records.length} records</span>
+            </div>
+            <div className="relative pl-6 space-y-4">
+              <div className="absolute left-2 top-0 bottom-0 w-px bg-[#E2E8F0]" />
+              {records.map((record, i) => (
+                <motion.div key={record.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="relative">
+                  <div className={`absolute -left-4 top-3 w-2.5 h-2.5 rounded-full border-2 border-white ${record.type === 'prescription' ? 'bg-green-500' : record.type === 'lab' ? 'bg-purple-500' : record.type === 'ai_diagnosis' ? 'bg-amber-500' : 'bg-[#1E40AF]'}`} />
+                  <div className="card hover:border-[#1E40AF] transition-colors">
+                    <div className="flex items-start gap-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${record.color}`}>
+                        <record.icon className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-[#0F172A] text-sm">{record.title}</span>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium capitalize ${record.type === 'prescription' ? 'bg-green-100 text-green-700 border-green-200' : record.type === 'lab' ? 'bg-purple-100 text-purple-700 border-purple-200' : record.type === 'ai_diagnosis' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>{record.type.replace(/_/g, ' ')}</span>
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-[#94A3B8]">
+                          <span>{record.date}</span>
+                          <span>·</span>
+                          <span>{record.doctor}</span>
+                        </div>
+                        {record.notes && <p className="text-xs text-[#64748B] mt-1">{record.notes}</p>}
+                      </div>
+                      <div className="flex gap-1.5">
+                        <button onClick={() => toast.info('Viewing record...')} className="p-1.5 text-[#94A3B8] hover:text-[#1E40AF] border border-[#E2E8F0] rounded-lg"><Eye className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => toast.info('Downloading...')} className="p-1.5 text-[#94A3B8] hover:text-[#1E40AF] border border-[#E2E8F0] rounded-lg"><Download className="w-3.5 h-3.5" /></button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        ))}
+        {Object.keys(grouped).length === 0 && (
+          <div className="card text-center py-16">
+            <Clock className="w-10 h-10 text-[#94A3B8] mx-auto mb-3" />
+            <p className="font-medium text-[#64748B]">No history found</p>
+          </div>
         )}
       </div>
     </div>
   );
-};
-
-export default History;
+}

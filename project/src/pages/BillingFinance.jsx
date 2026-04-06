@@ -1,757 +1,244 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  DollarSign,
-  CreditCard,
-  FileText,
-  Calendar,
-  Clock,
-  User,
-  Users,
-  TrendingUp,
-  TrendingDown,
-  Download,
-  Upload,
-  Search,
-  Filter,
-  Plus,
-  Edit,
-  Trash2,
-  Eye,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  Receipt,
-  Banknote,
-  Wallet,
-  PieChart,
-  BarChart3,
-  LineChart,
-  Building,
-  MapPin,
-  Phone,
-  Mail,
-  Printer,
-  Send,
-  RefreshCw,
-  Settings,
-  Shield,
-  Info,
-  X,
-  ChevronDown,
-  ChevronUp,
-  ExternalLink,
-  Calculator,
-  Target,
-  Award,
-  Activity,
-  Zap
-} from 'lucide-react';
+import { CreditCard, DollarSign, FileText, Download, Plus, Search, Calendar, CheckCircle, Clock, AlertTriangle, X, Printer, Eye, Edit, Trash2, Receipt, Building, User, Hash, Send } from 'lucide-react';
 import { toast } from 'react-toastify';
 
-const BillingFinance = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
-  const [showNewInvoice, setShowNewInvoice] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('');
+const INVOICES = [
+  { id: 'INV-2026-001', patient: 'John Smith', service: 'Cardiology Consultation', date: '2026-04-07', due: '2026-04-14', amount: 200, paid: 200, status: 'paid', insurance: 'Blue Cross' },
+  { id: 'INV-2026-002', patient: 'Maria Garcia', service: 'Follow-up Visit + Labs', date: '2026-04-07', due: '2026-04-14', amount: 350, paid: 150, status: 'partial', insurance: 'Aetna' },
+  { id: 'INV-2026-003', patient: 'Robert Chen', service: 'Emergency Consultation', date: '2026-04-06', due: '2026-04-13', amount: 500, paid: 0, status: 'overdue', insurance: 'United Health' },
+  { id: 'INV-2026-004', patient: 'Sarah Johnson', service: 'Diabetes Management', date: '2026-04-05', due: '2026-04-12', amount: 175, paid: 0, status: 'pending', insurance: 'Medicare' },
+  { id: 'INV-2026-005', patient: 'Michael Brown', service: 'Annual Physical + ECG', date: '2026-04-04', due: '2026-04-11', amount: 450, paid: 450, status: 'paid', insurance: 'Cigna' },
+];
 
-  // Financial data state
-  const [financialStats, setFinancialStats] = useState({
-    totalRevenue: 48750,
-    pendingPayments: 12400,
-    completedConsultations: 147,
-    averageConsultationFee: 280,
-    monthlyGrowth: 12.5,
-    unpaidInvoices: 8,
-    totalPatients: 234,
-    recurringPatients: 89
+const PAYMENT_METHODS = [
+  { id: 1, type: 'Credit Card', last4: '4242', brand: 'Visa', expiry: '12/27', isDefault: true },
+  { id: 2, type: 'Bank Account', last4: '6789', brand: 'Chase Checking', expiry: null, isDefault: false },
+];
+
+const STATUS_CONFIG = {
+  paid: { cls: 'bg-green-100 text-green-700 border-green-200', label: 'Paid' },
+  partial: { cls: 'bg-blue-100 text-blue-700 border-blue-200', label: 'Partial' },
+  pending: { cls: 'bg-amber-100 text-amber-700 border-amber-200', label: 'Pending' },
+  overdue: { cls: 'bg-red-100 text-red-700 border-red-200', label: 'Overdue' },
+};
+
+export default function BillingFinance() {
+  const [tab, setTab] = useState('invoices');
+  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState(null);
+  const [showCreateInvoice, setShowCreateInvoice] = useState(false);
+  const [invoices, setInvoices] = useState(INVOICES);
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [newInvoice, setNewInvoice] = useState({ patient: '', service: '', amount: '', insurance: '', due: '' });
+
+  const filtered = invoices.filter(inv => {
+    const matchSearch = inv.patient.toLowerCase().includes(search.toLowerCase()) || inv.id.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = filterStatus === 'all' || inv.status === filterStatus;
+    return matchSearch && matchStatus;
   });
 
-  // Sample invoices data
-  const [invoices] = useState([
-    {
-      id: 'INV-2024-001',
-      patientName: 'John Smith',
-      patientId: 'P001',
-      consultationType: 'Video Consultation',
-      specialty: 'Cardiology',
-      amount: 300,
-      tax: 45,
-      total: 345,
-      status: 'paid',
-      issueDate: '2024-01-15',
-      dueDate: '2024-01-30',
-      paidDate: '2024-01-18',
-      paymentMethod: 'Credit Card',
-      insuranceProvider: 'Blue Cross Blue Shield',
-      insuranceClaim: 'BCBS-2024-78901',
-      insuranceAmount: 210,
-      patientAmount: 135,
-      consultationDuration: 45,
-      consultationDate: '2024-01-15T10:00:00',
-      notes: 'Routine cardiology follow-up consultation'
-    },
-    {
-      id: 'INV-2024-002',
-      patientName: 'Maria Garcia',
-      patientId: 'P002',
-      consultationType: 'Emergency Consultation',
-      specialty: 'Emergency Medicine',
-      amount: 450,
-      tax: 67.5,
-      total: 517.5,
+  const totalRevenue = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.paid, 0);
+  const outstanding = invoices.filter(i => i.status !== 'paid').reduce((s, i) => s + (i.amount - i.paid), 0);
+  const overdue = invoices.filter(i => i.status === 'overdue').reduce((s, i) => s + i.amount, 0);
+
+  const createInvoice = () => {
+    if (!newInvoice.patient || !newInvoice.service || !newInvoice.amount) { toast.error('Fill required fields'); return; }
+    const inv = {
+      id: 'INV-2026-' + String(invoices.length + 1).padStart(3, '0'),
+      ...newInvoice,
+      amount: parseFloat(newInvoice.amount),
+      paid: 0,
+      date: new Date().toISOString().split('T')[0],
       status: 'pending',
-      issueDate: '2024-01-16',
-      dueDate: '2024-02-01',
-      paidDate: null,
-      paymentMethod: null,
-      insuranceProvider: 'Aetna',
-      insuranceClaim: 'AETNA-2024-45612',
-      insuranceAmount: 320,
-      patientAmount: 197.5,
-      consultationDuration: 60,
-      consultationDate: '2024-01-16T14:30:00',
-      notes: 'Emergency consultation for severe headache'
-    },
-    {
-      id: 'INV-2024-003',
-      patientName: 'Robert Johnson',
-      patientId: 'P003',
-      consultationType: 'Follow-up Consultation',
-      specialty: 'Cardiology',
-      amount: 200,
-      tax: 30,
-      total: 230,
-      status: 'overdue',
-      issueDate: '2024-01-10',
-      dueDate: '2024-01-25',
-      paidDate: null,
-      paymentMethod: null,
-      insuranceProvider: 'Medicare',
-      insuranceClaim: 'MED-2024-12345',
-      insuranceAmount: 160,
-      patientAmount: 70,
-      consultationDuration: 30,
-      consultationDate: '2024-01-10T11:00:00',
-      notes: 'Follow-up for diabetes management'
-    }
-  ]);
-
-  // Earnings by specialty
-  const [specialtyEarnings] = useState([
-    { specialty: 'Cardiology', amount: 18500, consultations: 65, percentage: 38 },
-    { specialty: 'Neurology', amount: 12400, consultations: 42, percentage: 25 },
-    { specialty: 'Internal Medicine', amount: 9800, consultations: 38, percentage: 20 },
-    { specialty: 'Emergency Medicine', amount: 5200, consultations: 18, percentage: 11 },
-    { specialty: 'Radiology', amount: 2850, consultations: 12, percentage: 6 }
-  ]);
-
-  // Monthly revenue data
-  const [monthlyRevenue] = useState([
-    { month: 'Jan', revenue: 45200, consultations: 142 },
-    { month: 'Feb', revenue: 38900, consultations: 128 },
-    { month: 'Mar', revenue: 42100, consultations: 135 },
-    { month: 'Apr', revenue: 47800, consultations: 149 },
-    { month: 'May', revenue: 51200, consultations: 162 },
-    { month: 'Jun', revenue: 48750, consultations: 147 }
-  ]);
-
-  // Payment gateways
-  const [paymentGateways] = useState([
-    {
-      id: 'stripe',
-      name: 'Stripe',
-      status: 'active',
-      commission: 2.9,
-      setupFee: 0,
-      monthlyFee: 0,
-      features: ['Credit Cards', 'Debit Cards', 'Digital Wallets', 'Bank Transfers']
-    },
-    {
-      id: 'paypal',
-      name: 'PayPal',
-      status: 'active',
-      commission: 3.49,
-      setupFee: 0,
-      monthlyFee: 0,
-      features: ['PayPal Account', 'Credit Cards', 'Buy Now Pay Later']
-    },
-    {
-      id: 'square',
-      name: 'Square',
-      status: 'inactive',
-      commission: 2.6,
-      setupFee: 0,
-      monthlyFee: 0,
-      features: ['Credit Cards', 'Contactless', 'Gift Cards']
-    }
-  ]);
-
-  // Insurance providers
-  const [insuranceProviders] = useState([
-    { name: 'Blue Cross Blue Shield', acceptanceRate: 95, averageReimbursement: 280, processingTime: '14 days' },
-    { name: 'Aetna', acceptanceRate: 89, averageReimbursement: 265, processingTime: '18 days' },
-    { name: 'Medicare', acceptanceRate: 100, averageReimbursement: 220, processingTime: '21 days' },
-    { name: 'Cigna', acceptanceRate: 87, averageReimbursement: 275, processingTime: '16 days' },
-    { name: 'UnitedHealthcare', acceptanceRate: 92, averageReimbursement: 290, processingTime: '12 days' }
-  ]);
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'paid': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'overdue': return 'bg-red-100 text-red-800';
-      case 'cancelled': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+    };
+    setInvoices(prev => [inv, ...prev]);
+    setShowCreateInvoice(false);
+    setNewInvoice({ patient: '', service: '', amount: '', insurance: '', due: '' });
+    toast.success('Invoice created');
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'paid': return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'pending': return <Clock className="w-4 h-4 text-yellow-500" />;
-      case 'overdue': return <AlertTriangle className="w-4 h-4 text-red-500" />;
-      case 'cancelled': return <XCircle className="w-4 h-4 text-gray-500" />;
-      default: return <Info className="w-4 h-4 text-gray-500" />;
-    }
+  const markPaid = (id) => {
+    setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, status: 'paid', paid: inv.amount } : inv));
+    setSelected(null);
+    toast.success('Marked as paid');
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
-
-  const generateInvoicePDF = (invoice) => {
-    // In a real application, this would generate and download a PDF
-    toast.success('Invoice PDF generated and downloaded');
-  };
-
-  const sendInvoiceEmail = (invoice) => {
-    toast.success(`Invoice sent to ${invoice.patientName}`);
-  };
-
-  const markAsPaid = (invoiceId, paymentDetails) => {
-    toast.success('Payment recorded successfully');
-  };
-
-  const submitInsuranceClaim = (invoice) => {
-    toast.success('Insurance claim submitted');
-  };
-
-  const filteredInvoices = invoices.filter(invoice =>
-    invoice.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const tabs = [
+    { id: 'invoices', label: 'Invoices' },
+    { id: 'payments', label: 'Payment Methods' },
+    { id: 'settings', label: 'Billing Settings' },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 pt-24 pb-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">Billing & Finance</h1>
-              <p className="text-gray-600">Comprehensive financial management for your medical practice</p>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <select
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="quarter">This Quarter</option>
-                <option value="year">This Year</option>
-              </select>
-              <button
-                onClick={() => setShowNewInvoice(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-                <span>New Invoice</span>
-              </button>
-            </div>
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-1"><span className="section-label">Finance</span><span className="text-[#CBD5E1] text-xs">·</span><span className="section-label">Billing</span></div>
+        <div className="flex items-start justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="font-display text-3xl font-bold text-[#0F172A]">Billing & Finance</h1>
+            <p className="text-[#64748B] mt-1 text-sm">Manage invoices, payments, and financial records</p>
           </div>
-        </motion.div>
-
-        {/* Tab Navigation */}
-        <div className="bg-white rounded-xl shadow-lg p-2 mb-8">
-          <div className="flex space-x-2">
-            {[
-              { id: 'dashboard', label: 'Dashboard', icon: PieChart },
-              { id: 'invoices', label: 'Invoices', icon: FileText },
-              { id: 'payments', label: 'Payments', icon: CreditCard },
-              { id: 'insurance', label: 'Insurance', icon: Shield },
-              { id: 'reports', label: 'Reports', icon: BarChart3 },
-              { id: 'settings', label: 'Settings', icon: Settings }
-            ].map(tab => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 px-4 py-3 rounded-lg font-medium transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-blue-500 text-white shadow-lg'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          <button onClick={() => setShowCreateInvoice(true)} className="btn-primary flex items-center gap-2"><Plus className="w-4 h-4" />New Invoice</button>
         </div>
+      </div>
 
-        {/* Tab Content */}
-        <AnimatePresence mode="wait">
-          {activeTab === 'dashboard' && (
-            <motion.div
-              key="dashboard"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-8"
-            >
-              {/* Financial Overview Cards */}
-              <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-6">
-                <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl shadow-lg p-6 text-white">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-green-100 text-sm">Total Revenue</p>
-                      <p className="text-2xl font-bold">{formatCurrency(financialStats.totalRevenue)}</p>
-                      <div className="flex items-center space-x-1 mt-2">
-                        <TrendingUp className="w-4 h-4" />
-                        <span className="text-sm">+{financialStats.monthlyGrowth}% this month</span>
-                      </div>
-                    </div>
-                    <DollarSign className="w-12 h-12 text-green-200" />
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-blue-100 text-sm">Pending Payments</p>
-                      <p className="text-2xl font-bold">{formatCurrency(financialStats.pendingPayments)}</p>
-                      <div className="flex items-center space-x-1 mt-2">
-                        <Clock className="w-4 h-4" />
-                        <span className="text-sm">{financialStats.unpaidInvoices} unpaid invoices</span>
-                      </div>
-                    </div>
-                    <Clock className="w-12 h-12 text-blue-200" />
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-purple-100 text-sm">Consultations</p>
-                      <p className="text-2xl font-bold">{financialStats.completedConsultations}</p>
-                      <div className="flex items-center space-x-1 mt-2">
-                        <Activity className="w-4 h-4" />
-                        <span className="text-sm">Avg: {formatCurrency(financialStats.averageConsultationFee)}</span>
-                      </div>
-                    </div>
-                    <Users className="w-12 h-12 text-purple-200" />
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-orange-100 text-sm">Patients</p>
-                      <p className="text-2xl font-bold">{financialStats.totalPatients}</p>
-                      <div className="flex items-center space-x-1 mt-2">
-                        <RefreshCw className="w-4 h-4" />
-                        <span className="text-sm">{financialStats.recurringPatients} recurring</span>
-                      </div>
-                    </div>
-                    <User className="w-12 h-12 text-orange-200" />
-                  </div>
-                </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {[
+          { label: 'Total Collected', value: '$' + totalRevenue.toLocaleString(), icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
+          { label: 'Outstanding', value: '$' + outstanding.toLocaleString(), icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
+          { label: 'Overdue', value: '$' + overdue.toLocaleString(), icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-50' },
+          { label: 'Total Invoices', value: invoices.length, icon: FileText, color: 'text-[#1E40AF]', bg: 'bg-[#EFF6FF]' },
+        ].map((s, i) => (
+          <div key={i} className="card">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold text-[#0F172A]">{s.value}</div>
+                <div className="text-xs text-[#64748B] mt-0.5">{s.label}</div>
               </div>
+              <div className={`w-9 h-9 rounded-xl ${s.bg} flex items-center justify-center`}><s.icon className={`w-4 h-4 ${s.color}`} /></div>
+            </div>
+          </div>
+        ))}
+      </div>
 
-              {/* Charts Section */}
-              <div className="grid lg:grid-cols-2 gap-8">
-                {/* Revenue Chart */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-6">Revenue Trend</h3>
-                  <div className="space-y-4">
-                    {monthlyRevenue.map((month, index) => (
-                      <div key={month.month} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <span className="w-8 text-sm font-medium text-gray-600">{month.month}</span>
-                          <div className="flex-1 bg-gray-200 rounded-full h-2 min-w-[200px]">
-                            <div
-                              className="bg-blue-500 h-2 rounded-full"
-                              style={{ width: `${(month.revenue / 60000) * 100}%` }}
-                            />
-                          </div>
+      <div className="flex border-b border-[#E2E8F0] mb-6">
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            className={`px-5 py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === t.id ? 'border-[#1E40AF] text-[#1E40AF]' : 'border-transparent text-[#64748B]'}`}>{t.label}</button>
+        ))}
+      </div>
+
+      <AnimatePresence mode="wait">
+        {tab === 'invoices' && (
+          <motion.div key="invoices" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <div className="flex gap-3 mb-4 flex-wrap">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+                <input className="input pl-9" placeholder="Search invoices..." value={search} onChange={e => setSearch(e.target.value)} />
+              </div>
+              <select className="input w-auto" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                <option value="all">All Status</option>
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+                <option value="partial">Partial</option>
+                <option value="overdue">Overdue</option>
+              </select>
+            </div>
+            <div className="space-y-3">
+              {filtered.map(inv => {
+                const st = STATUS_CONFIG[inv.status];
+                return (
+                  <div key={inv.id} className={`card cursor-pointer hover:border-[#1E40AF] transition-colors ${selected?.id === inv.id ? 'border-[#1E40AF]' : ''}`} onClick={() => setSelected(inv)}>
+                    <div className="flex items-center gap-4">
+                      <div className="w-9 h-9 bg-[#EFF6FF] rounded-xl flex items-center justify-center flex-shrink-0">
+                        <Receipt className="w-4 h-4 text-[#1E40AF]" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-mono text-xs text-[#1E40AF]">{inv.id}</span>
+                          <span className="font-medium text-[#0F172A] text-sm">{inv.patient}</span>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${st.cls}`}>{st.label}</span>
                         </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-gray-900">{formatCurrency(month.revenue)}</p>
-                          <p className="text-xs text-gray-500">{month.consultations} consults</p>
+                        <div className="flex items-center gap-4 mt-1 flex-wrap">
+                          <span className="text-xs text-[#64748B]">{inv.service}</span>
+                          <span className="text-xs text-[#94A3B8]">Due: {inv.due}</span>
+                          <span className="text-xs text-[#94A3B8]">{inv.insurance}</span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Specialty Earnings */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-6">Earnings by Specialty</h3>
-                  <div className="space-y-4">
-                    {specialtyEarnings.map((specialty, index) => (
-                      <div key={specialty.specialty} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className={`w-3 h-3 rounded-full bg-blue-${(index + 1) * 100}`} />
-                          <span className="text-sm font-medium text-gray-700">{specialty.specialty}</span>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-gray-900">{formatCurrency(specialty.amount)}</p>
-                          <p className="text-xs text-gray-500">{specialty.consultations} consults</p>
-                        </div>
+                      <div className="text-right flex-shrink-0">
+                        <div className="font-bold text-[#0F172A]">${inv.amount}</div>
+                        {inv.status === 'partial' && <div className="text-xs text-[#64748B]">Paid: ${inv.paid}</div>}
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Quick Actions</h3>
-                <div className="grid md:grid-cols-4 gap-4">
-                  <button className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-                    <Plus className="w-6 h-6 text-blue-600" />
-                    <span className="font-medium text-blue-900">Create Invoice</span>
-                  </button>
-                  <button className="flex items-center space-x-3 p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
-                    <Download className="w-6 h-6 text-green-600" />
-                    <span className="font-medium text-green-900">Export Reports</span>
-                  </button>
-                  <button className="flex items-center space-x-3 p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
-                    <Send className="w-6 h-6 text-purple-600" />
-                    <span className="font-medium text-purple-900">Send Reminders</span>
-                  </button>
-                  <button className="flex items-center space-x-3 p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
-                    <Calculator className="w-6 h-6 text-orange-600" />
-                    <span className="font-medium text-orange-900">Tax Calculator</span>
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {activeTab === 'invoices' && (
-            <motion.div
-              key="invoices"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              {/* Search and Filter */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search invoices..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <select className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                      <option value="all">All Status</option>
-                      <option value="paid">Paid</option>
-                      <option value="pending">Pending</option>
-                      <option value="overdue">Overdue</option>
-                    </select>
-                    <button className="flex items-center space-x-2 px-4 py-3 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
-                      <Filter className="w-5 h-5" />
-                      <span>More Filters</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Invoices List */}
-              <div className="space-y-4">
-                {filteredInvoices.map((invoice) => (
-                  <div key={invoice.id} className="bg-white rounded-xl shadow-lg p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                          <Receipt className="w-6 h-6 text-white" />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">{invoice.id}</h3>
-                          <p className="text-gray-600">{invoice.patientName}</p>
-                          <p className="text-sm text-gray-500">{invoice.consultationType}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center space-x-6">
-                        <div className="text-right">
-                          <p className="text-xl font-bold text-gray-900">{formatCurrency(invoice.total)}</p>
-                          <p className="text-sm text-gray-500">Due: {new Date(invoice.dueDate).toLocaleDateString()}</p>
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          {getStatusIcon(invoice.status)}
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(invoice.status)}`}>
-                            {invoice.status.toUpperCase()}
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => {
-                              setSelectedInvoice(invoice);
-                              setShowInvoiceModal(true);
-                            }}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="View Details"
-                          >
-                            <Eye className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => generateInvoicePDF(invoice)}
-                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                            title="Download PDF"
-                          >
-                            <Download className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => sendInvoiceEmail(invoice)}
-                            className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                            title="Send Email"
-                          >
-                            <Send className="w-5 h-5" />
-                          </button>
-                        </div>
+                      <div className="flex gap-2">
+                        <button onClick={e => { e.stopPropagation(); toast.info('Sending invoice...'); }} className="p-1.5 text-[#64748B] hover:text-[#1E40AF] border border-[#E2E8F0] rounded-lg"><Send className="w-3.5 h-3.5" /></button>
+                        <button onClick={e => { e.stopPropagation(); toast.info('Downloading...'); }} className="p-1.5 text-[#64748B] hover:text-[#1E40AF] border border-[#E2E8F0] rounded-lg"><Download className="w-3.5 h-3.5" /></button>
                       </div>
                     </div>
+                    {inv.status !== 'paid' && selected?.id === inv.id && (
+                      <div className="mt-3 pt-3 border-t border-[#E2E8F0] flex justify-end gap-2">
+                        <button onClick={() => markPaid(inv.id)} className="btn-primary text-sm flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" />Mark Paid</button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        {tab === 'payments' && (
+          <motion.div key="payments" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
+            <div className="card">
+              <h2 className="font-semibold text-[#0F172A] mb-4">Saved Payment Methods</h2>
+              <div className="space-y-3">
+                {PAYMENT_METHODS.map(pm => (
+                  <div key={pm.id} className="flex items-center gap-4 p-3 border border-[#E2E8F0] rounded-lg">
+                    <div className="w-10 h-10 bg-[#EFF6FF] rounded-xl flex items-center justify-center">
+                      <CreditCard className="w-5 h-5 text-[#1E40AF]" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-[#0F172A] text-sm">{pm.brand} ···· {pm.last4}</div>
+                      <div className="text-xs text-[#64748B]">{pm.type}{pm.expiry ? ` · Expires ${pm.expiry}` : ''}</div>
+                    </div>
+                    {pm.isDefault && <span className="text-xs bg-[#EFF6FF] text-[#1E40AF] border border-blue-200 px-2 py-0.5 rounded">Default</span>}
+                    <button onClick={() => toast.info('Removing...')} className="text-[#64748B] hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 ))}
               </div>
-            </motion.div>
-          )}
+              <button onClick={() => toast.info('Adding payment method...')} className="btn-secondary mt-4 flex items-center gap-2"><Plus className="w-4 h-4" />Add Payment Method</button>
+            </div>
+          </motion.div>
+        )}
 
-          {activeTab === 'payments' && (
-            <motion.div
-              key="payments"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              {/* Payment Gateways */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Payment Gateways</h3>
-                <div className="grid md:grid-cols-3 gap-6">
-                  {paymentGateways.map((gateway) => (
-                    <div key={gateway.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-semibold text-gray-900">{gateway.name}</h4>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          gateway.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {gateway.status}
-                        </span>
-                      </div>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Commission:</span>
-                          <span className="font-medium">{gateway.commission}%</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Setup Fee:</span>
-                          <span className="font-medium">{formatCurrency(gateway.setupFee)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Monthly Fee:</span>
-                          <span className="font-medium">{formatCurrency(gateway.monthlyFee)}</span>
-                        </div>
-                      </div>
-                      <div className="mt-4">
-                        <p className="text-xs text-gray-600 mb-2">Features:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {gateway.features.map((feature, index) => (
-                            <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
-                              {feature}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+        {tab === 'settings' && (
+          <motion.div key="settings" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="card">
+            <h2 className="font-semibold text-[#0F172A] mb-4">Billing Configuration</h2>
+            <div className="space-y-4 max-w-lg">
+              {[
+                { label: 'Practice Name', placeholder: 'Your Medical Practice' },
+                { label: 'Tax ID / NPI', placeholder: 'EIN or NPI number' },
+                { label: 'Payment Terms', placeholder: 'e.g., Net 30' },
+                { label: 'Late Fee (%)', placeholder: '1.5', type: 'number' },
+              ].map(f => (
+                <div key={f.label}><label className="block text-xs text-[#64748B] mb-1">{f.label}</label><input type={f.type || 'text'} className="input" placeholder={f.placeholder} /></div>
+              ))}
+              <div className="flex items-center justify-between p-3 border border-[#E2E8F0] rounded-lg">
+                <div><div className="font-medium text-[#0F172A] text-sm">Auto-send Invoices</div><div className="text-xs text-[#64748B]">Automatically email invoices after consultation</div></div>
+                <div className="w-11 h-6 rounded-full bg-[#1E40AF] relative cursor-pointer" onClick={() => toast.success('Updated')}><div className="w-4 h-4 bg-white rounded-full absolute top-1 translate-x-6" /></div>
+              </div>
+              <button onClick={() => toast.success('Settings saved')} className="btn-primary">Save Settings</button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Create Invoice Modal */}
+      <AnimatePresence>
+        {showCreateInvoice && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-display font-bold text-[#0F172A]">Create Invoice</h3>
+                <button onClick={() => setShowCreateInvoice(false)} className="text-[#94A3B8]"><X className="w-5 h-5" /></button>
+              </div>
+              <div className="space-y-3">
+                <div><label className="block text-xs text-[#64748B] mb-1">Patient Name *</label><input className="input" value={newInvoice.patient} onChange={e => setNewInvoice(p => ({ ...p, patient: e.target.value }))} placeholder="Full name" /></div>
+                <div><label className="block text-xs text-[#64748B] mb-1">Service *</label><input className="input" value={newInvoice.service} onChange={e => setNewInvoice(p => ({ ...p, service: e.target.value }))} placeholder="Service description" /></div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><label className="block text-xs text-[#64748B] mb-1">Amount ($) *</label><input type="number" className="input" value={newInvoice.amount} onChange={e => setNewInvoice(p => ({ ...p, amount: e.target.value }))} placeholder="0.00" /></div>
+                  <div><label className="block text-xs text-[#64748B] mb-1">Due Date</label><input type="date" className="input" value={newInvoice.due} onChange={e => setNewInvoice(p => ({ ...p, due: e.target.value }))} /></div>
                 </div>
+                <div><label className="block text-xs text-[#64748B] mb-1">Insurance</label><input className="input" value={newInvoice.insurance} onChange={e => setNewInvoice(p => ({ ...p, insurance: e.target.value }))} placeholder="Insurance provider" /></div>
+              </div>
+              <div className="flex gap-3 mt-6">
+                <button onClick={createInvoice} className="btn-primary flex-1">Create Invoice</button>
+                <button onClick={() => setShowCreateInvoice(false)} className="btn-secondary flex-1">Cancel</button>
               </div>
             </motion.div>
-          )}
-
-          {activeTab === 'insurance' && (
-            <motion.div
-              key="insurance"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              {/* Insurance Providers */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">Insurance Provider Performance</h3>
-                <div className="space-y-4">
-                  {insuranceProviders.map((provider, index) => (
-                    <div key={provider.name} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900">{provider.name}</h4>
-                          <div className="grid grid-cols-3 gap-4 mt-2 text-sm">
-                            <div>
-                              <p className="text-gray-600">Acceptance Rate</p>
-                              <p className="font-medium text-green-600">{provider.acceptanceRate}%</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-600">Avg. Reimbursement</p>
-                              <p className="font-medium text-blue-600">{formatCurrency(provider.averageReimbursement)}</p>
-                            </div>
-                            <div>
-                              <p className="text-gray-600">Processing Time</p>
-                              <p className="font-medium text-purple-600">{provider.processingTime}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Invoice Details Modal */}
-        <AnimatePresence>
-          {showInvoiceModal && selectedInvoice && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-              onClick={() => setShowInvoiceModal(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-              >
-                <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-gray-900">Invoice {selectedInvoice.id}</h2>
-                  <button
-                    onClick={() => setShowInvoiceModal(false)}
-                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
-                
-                <div className="p-6 space-y-6">
-                  {/* Invoice Header */}
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-3">Patient Information</h3>
-                      <div className="space-y-2 text-sm">
-                        <p><span className="text-gray-600">Name:</span> {selectedInvoice.patientName}</p>
-                        <p><span className="text-gray-600">Patient ID:</span> {selectedInvoice.patientId}</p>
-                        <p><span className="text-gray-600">Insurance:</span> {selectedInvoice.insuranceProvider}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-3">Consultation Details</h3>
-                      <div className="space-y-2 text-sm">
-                        <p><span className="text-gray-600">Type:</span> {selectedInvoice.consultationType}</p>
-                        <p><span className="text-gray-600">Duration:</span> {selectedInvoice.consultationDuration} minutes</p>
-                        <p><span className="text-gray-600">Date:</span> {new Date(selectedInvoice.consultationDate).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Billing Breakdown */}
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="font-semibold text-gray-900 mb-3">Billing Breakdown</h3>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>Consultation Fee:</span>
-                        <span>{formatCurrency(selectedInvoice.amount)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Tax:</span>
-                        <span>{formatCurrency(selectedInvoice.tax)}</span>
-                      </div>
-                      <div className="border-t border-gray-300 pt-2 mt-2">
-                        <div className="flex justify-between font-semibold">
-                          <span>Total:</span>
-                          <span>{formatCurrency(selectedInvoice.total)}</span>
-                        </div>
-                      </div>
-                      <div className="mt-3 pt-3 border-t border-gray-300">
-                        <div className="flex justify-between text-blue-600">
-                          <span>Insurance Coverage:</span>
-                          <span>{formatCurrency(selectedInvoice.insuranceAmount)}</span>
-                        </div>
-                        <div className="flex justify-between text-orange-600">
-                          <span>Patient Responsibility:</span>
-                          <span>{formatCurrency(selectedInvoice.patientAmount)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  {selectedInvoice.status === 'pending' && (
-                    <div className="flex space-x-4">
-                      <button
-                        onClick={() => markAsPaid(selectedInvoice.id)}
-                        className="flex-1 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                      >
-                        Mark as Paid
-                      </button>
-                      <button
-                        onClick={() => submitInsuranceClaim(selectedInvoice)}
-                        className="flex-1 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                      >
-                        Submit Insurance Claim
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
-};
-
-export default BillingFinance;
+}

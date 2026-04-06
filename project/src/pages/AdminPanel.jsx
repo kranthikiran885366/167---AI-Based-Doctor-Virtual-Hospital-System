@@ -1,433 +1,228 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  Users, 
-  Activity, 
-  FileText, 
-  Settings, 
-  BarChart3,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Download,
-  Filter,
-  Search,
-  Plus,
-  Edit,
-  Trash2,
-  Eye
-} from 'lucide-react';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Users, Activity, Shield, Settings, Bell, Database, TrendingUp, AlertTriangle, CheckCircle, Clock, Search, Filter, Plus, Edit, Trash2, Eye, Download, Globe, Lock, Star, BarChart3, Zap, UserCheck, FileText, RefreshCw } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { Bar, Line } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, Filler } from 'chart.js';
 
-const AdminPanel = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [users, setUsers] = useState([]);
-  const [consultations, setConsultations] = useState([]);
-  const [systemStats, setSystemStats] = useState({
-    totalUsers: 1250,
-    activeConsultations: 45,
-    totalReports: 890,
-    emergencyAlerts: 12
-  });
+ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, Filler);
 
-  const [analyticsData, setAnalyticsData] = useState({
-    userGrowth: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-      datasets: [{
-        label: 'New Users',
-        data: [120, 190, 300, 500, 200, 300],
-        borderColor: 'rgb(59, 130, 246)',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        tension: 0.4
-      }]
-    },
-    consultationTypes: {
-      labels: ['General', 'Emergency', 'Report Analysis', 'Prescription'],
-      datasets: [{
-        data: [45, 15, 25, 15],
-        backgroundColor: ['#3B82F6', '#EF4444', '#10B981', '#F59E0B']
-      }]
-    }
-  });
+const DOCTORS = [
+  { id: 1, name: 'Dr. Sarah Johnson', specialty: 'Cardiology', status: 'active', patients: 234, rating: 4.9, revenue: '$48,200', joined: '2022-03-15' },
+  { id: 2, name: 'Dr. Michael Chen', specialty: 'Neurology', status: 'active', patients: 189, rating: 4.8, revenue: '$39,600', joined: '2021-08-20' },
+  { id: 3, name: 'Dr. Emily Park', specialty: 'Pediatrics', status: 'inactive', patients: 156, rating: 4.7, revenue: '$28,900', joined: '2023-01-10' },
+  { id: 4, name: 'Dr. James Wilson', specialty: 'Orthopedics', status: 'pending', patients: 0, rating: 0, revenue: '$0', joined: '2026-04-01' },
+];
 
-  useEffect(() => {
-    // Simulate loading data
-    loadDashboardData();
-  }, []);
+const SYSTEM_ALERTS = [
+  { type: 'warning', message: 'High server load detected (78%)', time: '5 min ago' },
+  { type: 'info', message: 'New doctor registration pending review', time: '20 min ago' },
+  { type: 'error', message: 'Payment gateway timeout — 3 failed transactions', time: '1 hour ago' },
+  { type: 'success', message: 'Database backup completed', time: '2 hours ago' },
+];
 
-  const loadDashboardData = async () => {
-    // Simulate API calls
-    const mockUsers = [
-      { id: 1, name: 'John Doe', email: 'john@example.com', status: 'active', joinDate: '2024-01-15' },
-      { id: 2, name: 'Jane Smith', email: 'jane@example.com', status: 'active', joinDate: '2024-01-20' },
-      { id: 3, name: 'Mike Johnson', email: 'mike@example.com', status: 'inactive', joinDate: '2024-01-25' }
-    ];
+const chartOpts = { responsive: true, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#F1F5F9' }, ticks: { color: '#64748B', font: { size: 11 } } }, x: { grid: { display: false }, ticks: { color: '#64748B' } } } };
 
-    const mockConsultations = [
-      { id: 1, patientName: 'John Doe', type: 'General', status: 'completed', date: '2024-01-28', aiConfidence: 85 },
-      { id: 2, patientName: 'Jane Smith', type: 'Emergency', status: 'active', date: '2024-01-28', aiConfidence: 92 },
-      { id: 3, patientName: 'Mike Johnson', type: 'Report Analysis', status: 'pending', date: '2024-01-28', aiConfidence: 78 }
-    ];
+export default function AdminPanel() {
+  const [tab, setTab] = useState('overview');
+  const [search, setSearch] = useState('');
+  const [doctors, setDoctors] = useState(DOCTORS);
 
-    setUsers(mockUsers);
-    setConsultations(mockConsultations);
+  const stats = [
+    { label: 'Total Users', value: '2,847', change: '+12%', icon: Users, color: 'text-[#1E40AF]', bg: 'bg-[#EFF6FF]' },
+    { label: 'Active Doctors', value: '124', change: '+5%', icon: UserCheck, color: 'text-green-600', bg: 'bg-green-50' },
+    { label: 'Monthly Revenue', value: '$284K', change: '+18%', icon: TrendingUp, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { label: 'Open Tickets', value: '7', change: '-3', icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-50' },
+  ];
+
+  const usageData = { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], datasets: [{ data: [420, 580, 490, 620, 710, 340, 280], backgroundColor: '#1E40AF', borderRadius: 6 }] };
+  const revenueData = { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], datasets: [{ data: [220, 248, 232, 270, 258, 284], borderColor: '#1E40AF', backgroundColor: 'rgba(30,64,175,0.08)', fill: true, tension: 0.4, pointBackgroundColor: '#1E40AF', pointRadius: 4 }] };
+
+  const toggleDoctorStatus = (id) => {
+    setDoctors(prev => prev.map(d => d.id === id ? { ...d, status: d.status === 'active' ? 'inactive' : 'active' } : d));
+    toast.success('Doctor status updated');
   };
 
   const tabs = [
-    { id: 'dashboard', name: 'Dashboard', icon: BarChart3 },
-    { id: 'users', name: 'Users', icon: Users },
-    { id: 'consultations', name: 'Consultations', icon: Activity },
-    { id: 'reports', name: 'Reports', icon: FileText },
-    { id: 'settings', name: 'Settings', icon: Settings }
+    { id: 'overview', label: 'Overview' },
+    { id: 'doctors', label: 'Doctors' },
+    { id: 'system', label: 'System' },
   ];
 
-  const StatCard = ({ title, value, icon: Icon, color, change }) => (
-    <div className="bg-white p-6 rounded-2xl shadow-lg">
-      <div className="flex items-center justify-between mb-4">
-        <div className={`w-12 h-12 ${color} rounded-xl flex items-center justify-center`}>
-          <Icon className="w-6 h-6 text-white" />
-        </div>
-        {change && (
-          <span className={`text-sm font-medium ${change > 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {change > 0 ? '+' : ''}{change}%
-          </span>
-        )}
-      </div>
-      <div className="text-2xl font-bold text-gray-900 mb-1">{value}</div>
-      <div className="text-gray-500 text-sm">{title}</div>
-    </div>
-  );
+  const filtered = doctors.filter(d => d.name.toLowerCase().includes(search.toLowerCase()) || d.specialty.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Panel</h1>
-          <p className="text-gray-600">Manage your AI Doctor platform</p>
-        </motion.div>
-
-        {/* Tabs */}
-        <div className="bg-white rounded-2xl shadow-lg mb-8">
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center space-x-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
-                      activeTab === tab.id
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span>{tab.name}</span>
-                  </button>
-                );
-              })}
-            </nav>
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-1"><span className="section-label">Administration</span><span className="text-[#CBD5E1] text-xs">·</span><span className="section-label">Control Panel</span></div>
+        <div className="flex items-start justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="font-display text-3xl font-bold text-[#0F172A]">Admin Panel</h1>
+            <p className="text-[#64748B] mt-1 text-sm">System management, analytics, and user administration</p>
           </div>
-
-          <div className="p-6">
-            {/* Dashboard Tab */}
-            {activeTab === 'dashboard' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-8"
-              >
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <StatCard
-                    title="Total Users"
-                    value={systemStats.totalUsers.toLocaleString()}
-                    icon={Users}
-                    color="bg-blue-500"
-                    change={12}
-                  />
-                  <StatCard
-                    title="Active Consultations"
-                    value={systemStats.activeConsultations}
-                    icon={Activity}
-                    color="bg-green-500"
-                    change={8}
-                  />
-                  <StatCard
-                    title="Reports Analyzed"
-                    value={systemStats.totalReports}
-                    icon={FileText}
-                    color="bg-purple-500"
-                    change={15}
-                  />
-                  <StatCard
-                    title="Emergency Alerts"
-                    value={systemStats.emergencyAlerts}
-                    icon={AlertTriangle}
-                    color="bg-red-500"
-                    change={-5}
-                  />
-                </div>
-
-                {/* Charts */}
-                <div className="grid lg:grid-cols-2 gap-8">
-                  <div className="bg-white p-6 rounded-2xl shadow-lg">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">User Growth</h3>
-                    <div className="h-64">
-                      <Line 
-                        data={analyticsData.userGrowth}
-                        options={{
-                          responsive: true,
-                          maintainAspectRatio: false,
-                          plugins: { legend: { position: 'top' } }
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bg-white p-6 rounded-2xl shadow-lg">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Consultation Types</h3>
-                    <div className="h-64">
-                      <Doughnut 
-                        data={analyticsData.consultationTypes}
-                        options={{
-                          responsive: true,
-                          maintainAspectRatio: false,
-                          plugins: { legend: { position: 'bottom' } }
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Recent Activity */}
-                <div className="bg-white p-6 rounded-2xl shadow-lg">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
-                  <div className="space-y-4">
-                    {consultations.slice(0, 5).map((consultation) => (
-                      <div key={consultation.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <Activity className="w-5 h-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-900">{consultation.patientName}</div>
-                            <div className="text-sm text-gray-500">{consultation.type} - {consultation.date}</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            consultation.status === 'completed' ? 'bg-green-100 text-green-800' :
-                            consultation.status === 'active' ? 'bg-blue-100 text-blue-800' :
-                            'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {consultation.status}
-                          </span>
-                          <span className="text-sm text-gray-500">{consultation.aiConfidence}% AI</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Users Tab */}
-            {activeTab === 'users' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
-              >
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-gray-900">User Management</h2>
-                  <button className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                    <Plus className="w-4 h-4" />
-                    <span>Add User</span>
-                  </button>
-                </div>
-
-                <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-                  <div className="p-6 border-b border-gray-200">
-                    <div className="flex items-center space-x-4">
-                      <div className="relative flex-1">
-                        <Search className="w-5 h-5 text-gray-400 absolute left-3 top-3" />
-                        <input
-                          type="text"
-                          placeholder="Search users..."
-                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                      <button className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                        <Filter className="w-4 h-4" />
-                        <span>Filter</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Join Date</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {users.map((user) => (
-                          <tr key={user.id}>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div>
-                                <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                                <div className="text-sm text-gray-500">{user.email}</div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                              }`}>
-                                {user.status}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {new Date(user.joinDate).toLocaleDateString()}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <div className="flex items-center space-x-2">
-                                <button className="text-blue-600 hover:text-blue-900">
-                                  <Eye className="w-4 h-4" />
-                                </button>
-                                <button className="text-green-600 hover:text-green-900">
-                                  <Edit className="w-4 h-4" />
-                                </button>
-                                <button className="text-red-600 hover:text-red-900">
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Consultations Tab */}
-            {activeTab === 'consultations' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
-              >
-                <h2 className="text-xl font-semibold text-gray-900">AI Consultations</h2>
-
-                <div className="grid gap-6">
-                  {consultations.map((consultation) => (
-                    <div key={consultation.id} className="bg-white p-6 rounded-2xl shadow-lg">
-                      <div className="flex items-center justify-between mb-4">
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">{consultation.patientName}</h3>
-                          <p className="text-gray-600">{consultation.type} Consultation</p>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                            consultation.status === 'completed' ? 'bg-green-100 text-green-800' :
-                            consultation.status === 'active' ? 'bg-blue-100 text-blue-800' :
-                            'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {consultation.status}
-                          </span>
-                          <span className="text-sm text-gray-500">AI Confidence: {consultation.aiConfidence}%</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500">{consultation.date}</span>
-                        <button className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                          <Eye className="w-4 h-4" />
-                          <span>View Details</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-
-            {/* Settings Tab */}
-            {activeTab === 'settings' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
-              >
-                <h2 className="text-xl font-semibold text-gray-900">System Settings</h2>
-
-                <div className="grid gap-6">
-                  <div className="bg-white p-6 rounded-2xl shadow-lg">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">AI Configuration</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          AI Confidence Threshold
-                        </label>
-                        <input
-                          type="range"
-                          min="50"
-                          max="95"
-                          defaultValue="75"
-                          className="w-full"
-                        />
-                        <div className="flex justify-between text-sm text-gray-500 mt-1">
-                          <span>50%</span>
-                          <span>95%</span>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Emergency Alert Sensitivity
-                        </label>
-                        <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                          <option>Low</option>
-                          <option>Medium</option>
-                          <option>High</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white p-6 rounded-2xl shadow-lg">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">System Maintenance</h3>
-                    <div className="space-y-4">
-                      <button className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                        Update AI Models
-                      </button>
-                      <button className="w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
-                        Backup Database
-                      </button>
-                      <button className="w-full px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
-                        Clear Cache
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-xs font-medium text-green-700">All Systems Operational</span>
           </div>
         </div>
       </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {stats.map((s, i) => (
+          <div key={i} className="card">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold text-[#0F172A]">{s.value}</div>
+                <div className="text-xs text-[#64748B] mt-0.5">{s.label}</div>
+                <div className="text-xs text-green-600 mt-0.5 font-medium">{s.change}</div>
+              </div>
+              <div className={`w-10 h-10 rounded-xl ${s.bg} flex items-center justify-center`}><s.icon className={`w-5 h-5 ${s.color}`} /></div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex border-b border-[#E2E8F0] mb-6">
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            className={`px-5 py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === t.id ? 'border-[#1E40AF] text-[#1E40AF]' : 'border-transparent text-[#64748B]'}`}>{t.label}
+          </button>
+        ))}
+      </div>
+
+      <AnimatePresence mode="wait">
+        {tab === 'overview' && (
+          <motion.div key="overview" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="card">
+              <div className="flex items-center justify-between mb-4"><h2 className="font-semibold text-[#0F172A]">Daily Usage</h2><span className="text-xs text-[#94A3B8]">Consultations this week</span></div>
+              <Bar data={usageData} options={{ ...chartOpts, plugins: { ...chartOpts.plugins, legend: { display: false } } }} height={160} />
+            </div>
+            <div className="card">
+              <div className="flex items-center justify-between mb-4"><h2 className="font-semibold text-[#0F172A]">Revenue ($K)</h2><span className="text-xs text-[#94A3B8]">Last 6 months</span></div>
+              <Line data={revenueData} options={{ ...chartOpts, plugins: { ...chartOpts.plugins, legend: { display: false } }, elements: { line: { tension: 0.4 } } }} height={160} />
+            </div>
+
+            <div className="card">
+              <h2 className="font-semibold text-[#0F172A] mb-4">System Alerts</h2>
+              <div className="space-y-3">
+                {SYSTEM_ALERTS.map((alert, i) => (
+                  <div key={i} className={`flex items-start gap-3 p-3 rounded-lg border ${alert.type === 'error' ? 'bg-red-50 border-red-200' : alert.type === 'warning' ? 'bg-amber-50 border-amber-200' : alert.type === 'success' ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'}`}>
+                    <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${alert.type === 'error' ? 'bg-red-500' : alert.type === 'warning' ? 'bg-amber-500' : alert.type === 'success' ? 'bg-green-500' : 'bg-blue-500'}`} />
+                    <div className="flex-1 text-sm text-[#374151]">{alert.message}</div>
+                    <span className="text-xs text-[#94A3B8] flex-shrink-0">{alert.time}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="card">
+              <h2 className="font-semibold text-[#0F172A] mb-4">Quick Stats</h2>
+              <div className="space-y-3">
+                {[
+                  { label: 'Uptime', value: '99.97%', status: 'healthy' },
+                  { label: 'API Response Time', value: '142ms', status: 'healthy' },
+                  { label: 'Database Usage', value: '42.3 GB / 100 GB', status: 'healthy' },
+                  { label: 'Active Sessions', value: '847', status: 'healthy' },
+                  { label: 'Cache Hit Rate', value: '94.2%', status: 'healthy' },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center justify-between p-2 border border-[#E2E8F0] rounded-lg">
+                    <span className="text-sm text-[#374151]">{item.label}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-[#0F172A] text-sm">{item.value}</span>
+                      <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {tab === 'doctors' && (
+          <motion.div key="doctors" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <div className="flex gap-3 mb-4 flex-wrap">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+                <input className="input pl-9" placeholder="Search doctors..." value={search} onChange={e => setSearch(e.target.value)} />
+              </div>
+              <button onClick={() => toast.info('Add doctor form...')} className="btn-primary flex items-center gap-2"><Plus className="w-4 h-4" />Add Doctor</button>
+            </div>
+            <div className="space-y-3">
+              {filtered.map(doctor => (
+                <div key={doctor.id} className="card">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-[#EFF6FF] rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="font-bold text-[#1E40AF] text-sm">{doctor.name.split(' ').slice(-1)[0][0]}</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-[#0F172A] text-sm">{doctor.name}</span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium capitalize ${doctor.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' : doctor.status === 'pending' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>{doctor.status}</span>
+                      </div>
+                      <div className="flex items-center gap-4 mt-1 flex-wrap">
+                        <span className="text-xs text-[#64748B]">{doctor.specialty}</span>
+                        <span className="text-xs text-[#94A3B8]">{doctor.patients} patients</span>
+                        {doctor.rating > 0 && <span className="flex items-center gap-0.5 text-xs text-[#94A3B8]"><Star className="w-3 h-3 text-amber-400" />{doctor.rating}</span>}
+                        <span className="text-xs text-[#94A3B8]">{doctor.revenue} revenue</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => toggleDoctorStatus(doctor.id)} className={`btn-secondary text-xs py-1.5 px-3 ${doctor.status === 'active' ? 'text-red-600 border-red-200' : 'text-green-600 border-green-200'}`}>
+                        {doctor.status === 'active' ? 'Deactivate' : 'Activate'}
+                      </button>
+                      <button onClick={() => toast.info(`Viewing ${doctor.name}`)} className="p-1.5 text-[#64748B] hover:text-[#1E40AF] border border-[#E2E8F0] rounded-lg"><Eye className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => { setDoctors(prev => prev.filter(d => d.id !== doctor.id)); toast.success('Doctor removed'); }} className="p-1.5 text-[#64748B] hover:text-red-500 border border-[#E2E8F0] rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {tab === 'system' && (
+          <motion.div key="system" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
+            <div className="card">
+              <h2 className="font-semibold text-[#0F172A] mb-4">System Configuration</h2>
+              <div className="space-y-3">
+                {[
+                  { label: 'Maintenance Mode', desc: 'Temporarily disable access for maintenance', enabled: false, key: 'maintenance' },
+                  { label: 'New Registrations', desc: 'Allow new doctor registrations', enabled: true, key: 'registrations' },
+                  { label: 'AI Features', desc: 'Enable AI-powered diagnostic features', enabled: true, key: 'ai' },
+                  { label: 'Email Notifications', desc: 'Send automated email notifications', enabled: true, key: 'email' },
+                  { label: 'Analytics Collection', desc: 'Collect anonymized usage analytics', enabled: false, key: 'analytics' },
+                ].map((setting, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 border border-[#E2E8F0] rounded-lg">
+                    <div>
+                      <div className="font-medium text-[#0F172A] text-sm">{setting.label}</div>
+                      <div className="text-xs text-[#64748B]">{setting.desc}</div>
+                    </div>
+                    <button onClick={() => toast.success(`${setting.label} toggled`)}
+                      className={`w-11 h-6 rounded-full transition-colors relative flex-shrink-0 ${setting.enabled ? 'bg-[#1E40AF]' : 'bg-[#CBD5E1]'}`}>
+                      <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${setting.enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="card">
+              <h2 className="font-semibold text-[#0F172A] mb-4">Actions</h2>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: 'Clear Cache', icon: RefreshCw, action: () => toast.success('Cache cleared') },
+                  { label: 'Backup Database', icon: Database, action: () => toast.success('Backup started') },
+                  { label: 'Export Logs', icon: Download, action: () => toast.info('Exporting logs...') },
+                  { label: 'Send Notification', icon: Bell, action: () => toast.info('Notification sent') },
+                ].map((action, i) => (
+                  <button key={i} onClick={action.action} className="btn-secondary flex items-center gap-2 justify-center">
+                    <action.icon className="w-4 h-4" />{action.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
-};
-
-export default AdminPanel;
+}
