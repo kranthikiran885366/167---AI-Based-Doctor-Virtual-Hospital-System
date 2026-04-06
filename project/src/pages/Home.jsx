@@ -1,255 +1,263 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, useInView } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { 
-  Stethoscope, 
-  FileText, 
-  Pill, 
-  AlertTriangle, 
-  Shield, 
-  Clock, 
-  Users,
-  Star,
-  ArrowRight,
-  CheckCircle
+import {
+  Brain, FileText, Pill, AlertTriangle, Shield, Clock, Users,
+  ArrowRight, CheckCircle, Heart, Activity, Zap, Lock, TrendingUp,
+  Stethoscope, Star
 } from 'lucide-react';
 
+const FadeUp = ({ children, delay = 0, className = '' }) => {
+  const ref = React.useRef(null);
+  const isInView = useInView(ref, { once: true, margin: '-60px' });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 20 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.5, delay, ease: 'easeOut' }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
 const Home = () => {
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
+
   const features = [
-    {
-      icon: Stethoscope,
-      title: 'AI Diagnosis',
-      description: 'Get instant medical diagnosis from our advanced AI system',
-      color: 'from-blue-500 to-blue-600'
-    },
-    {
-      icon: FileText,
-      title: 'Report Analysis',
-      description: 'Upload and analyze medical reports with AI-powered insights',
-      color: 'from-green-500 to-green-600'
-    },
-    {
-      icon: Pill,
-      title: 'Smart Prescriptions',
-      description: 'Receive personalized medication recommendations',
-      color: 'from-purple-500 to-purple-600'
-    },
-    {
-      icon: AlertTriangle,
-      title: 'Emergency Care',
-      description: '24/7 emergency guidance and first aid assistance',
-      color: 'from-red-500 to-red-600'
-    }
+    { icon: Brain, name: 'AI Diagnosis', desc: 'Symptom analysis powered by clinical-grade machine learning.', href: '/ai-diagnosis' },
+    { icon: FileText, name: 'Report Analysis', desc: 'Intelligent parsing of lab results with instant clinical context.', href: '/lab-reports-analysis' },
+    { icon: Pill, name: 'Smart Prescriptions', desc: 'Personalized medication recommendations with interaction checks.', href: '/prescription' },
+    { icon: Activity, name: 'Vitals Monitoring', desc: 'Real-time tracking with automated alerts and trend analysis.', href: '/dashboard' },
+    { icon: AlertTriangle, name: 'Emergency Response', desc: '24/7 triage and dispatch coordination for critical cases.', href: '/emergency' },
+    { icon: Stethoscope, name: 'Telemedicine', desc: 'HD video consultations with real-time transcription.', href: '/consultation-modes' },
   ];
 
   const stats = [
-    { number: '50K+', label: 'Patients Served' },
-    { number: '98%', label: 'Accuracy Rate' },
-    { number: '24/7', label: 'Availability' },
-    { number: '5sec', label: 'Response Time' }
+    { value: '50K+', label: 'Patients served' },
+    { value: '98%', label: 'Diagnostic accuracy' },
+    { value: '24/7', label: 'Always available' },
+    { value: '<5s', label: 'Response time' },
   ];
 
   const testimonials = [
     {
-      name: 'Dr. Sarah Johnson',
-      role: 'Cardiologist',
-      content: 'This AI system has revolutionized how we approach remote healthcare. Incredibly accurate and user-friendly.',
-      rating: 5
+      quote: 'This has fundamentally changed how we approach remote diagnostics. The accuracy is remarkable.',
+      author: 'Dr. Sarah Johnson', role: 'Cardiologist, UCSF',
+      img: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=80&h=80&fit=crop&auto=format'
     },
     {
-      name: 'Michael Chen',
-      role: 'Patient',
-      content: 'Saved my life during a medical emergency. The instant diagnosis helped me get treatment in time.',
-      rating: 5
+      quote: 'The instant analysis saved critical minutes during an emergency. I cannot imagine working without it.',
+      author: 'Michael Chen', role: 'Patient',
+      img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&auto=format'
     },
     {
-      name: 'Dr. Priya Patel',
-      role: 'General Practitioner',
-      content: 'The report analysis feature is outstanding. It helps me make better decisions for my patients.',
-      rating: 5
-    }
+      quote: 'Report analysis that used to take 20 minutes now happens in seconds with better precision.',
+      author: 'Dr. Priya Patel', role: 'General Practitioner',
+      img: 'https://images.unsplash.com/photo-1594824201504-82c16a5f4b3d?w=80&h=80&fit=crop&auto=format'
+    },
   ];
 
+  const trustBadges = [
+    { icon: Shield, text: 'HIPAA Compliant' },
+    { icon: Lock, text: 'End-to-End Encrypted' },
+    { icon: CheckCircle, text: 'FDA Referenced' },
+    { icon: TrendingUp, text: 'Clinically Validated' },
+  ];
+
+  useEffect(() => {
+    const t = setInterval(() => setCurrentTestimonial(p => (p + 1) % testimonials.length), 6000);
+    return () => clearInterval(t);
+  }, []);
+
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-transparent to-green-600/10" />
-        
-        <div className="max-w-7xl mx-auto relative">
-          <div className="text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="mb-8"
-            >
-              <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-                Your AI-Powered
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600">
-                  {' '}Virtual Hospital
-                </span>
-              </h1>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-                Experience the future of healthcare with our advanced AI system. Get instant diagnosis, 
-                prescription recommendations, and emergency care assistance - all in one platform.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  to="/diagnosis"
-                  className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-green-600 text-white font-semibold rounded-full hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-                >
-                  Start Diagnosis
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Link>
-                <Link
-                  to="/emergency"
-                  className="inline-flex items-center px-8 py-4 bg-red-600 text-white font-semibold rounded-full hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-                >
-                  Emergency Help
-                  <AlertTriangle className="ml-2 w-5 h-5" />
-                </Link>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
+    <div className="min-h-screen overflow-x-hidden">
+      <section className="relative min-h-[88vh] flex items-center px-6 lg:px-16 py-20">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/60 via-transparent to-slate-50" />
+        <div className="absolute top-20 right-0 w-[480px] h-[480px] bg-blue-100/30 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Features Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Revolutionary Healthcare Features
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Powered by advanced AI technology, our platform offers comprehensive healthcare solutions
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
-                >
-                  <div className={`w-14 h-14 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center mb-6`}>
-                    <Icon className="w-7 h-7 text-white" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
-                  <p className="text-gray-600">{feature.description}</p>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-green-600">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="text-center text-white"
-              >
-                <div className="text-4xl font-bold mb-2">{stat.number}</div>
-                <div className="text-blue-100">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Trusted by Healthcare Professionals
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              See what doctors and patients are saying about our AI healthcare platform
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white p-8 rounded-2xl shadow-lg"
-              >
-                <div className="flex items-center mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <p className="text-gray-600 mb-6 italic">"{testimonial.content}"</p>
-                <div>
-                  <div className="font-semibold text-gray-900">{testimonial.name}</div>
-                  <div className="text-gray-500">{testimonial.role}</div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="relative max-w-5xl">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
           >
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">
-              Ready to Experience the Future of Healthcare?
-            </h2>
-            <p className="text-xl text-gray-600 mb-8">
-              Join thousands of users who trust our AI-powered healthcare platform
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-blue-200 bg-blue-50 text-[#1E40AF] text-xs font-medium mb-8">
+              <Zap className="w-3.5 h-3.5" />
+              Powered by clinical AI
+            </div>
+
+            <h1 className="font-display text-[56px] md:text-[72px] lg:text-[88px] font-800 leading-[1.0] tracking-[-0.03em] text-slate-900 mb-7">
+              Healthcare<br />
+              <span className="text-[#1E40AF]">reimagined.</span>
+            </h1>
+
+            <p className="text-lg text-slate-500 leading-relaxed max-w-xl mb-10">
+              Instant diagnosis, intelligent report analysis, and 24/7 emergency care — 
+              all in one platform built for clinicians and patients alike.
             </p>
-            <Link
-              to="/dashboard"
-              className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-green-600 text-white font-semibold rounded-full hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-            >
-              Get Started Today
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Link>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link to="/dashboard" className="btn-primary text-sm px-5 py-2.5 rounded-lg font-semibold">
+                Open Dashboard
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link to="/ai-diagnosis" className="btn-secondary text-sm px-5 py-2.5 rounded-lg font-semibold">
+                Try AI Diagnosis
+              </Link>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-5 mt-10">
+              {trustBadges.map(({ icon: Icon, text }) => (
+                <div key={text} className="flex items-center gap-1.5 text-xs text-slate-500">
+                  <Icon className="w-3.5 h-3.5 text-emerald-500" />
+                  {text}
+                </div>
+              ))}
+            </div>
           </motion.div>
         </div>
-      </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <Stethoscope className="w-8 h-8 text-blue-400" />
-            <div>
-              <h3 className="text-xl font-bold">AI Doctor</h3>
-              <p className="text-gray-400 text-sm">MVK Solutions</p>
+        <motion.div
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
+          className="absolute right-16 bottom-16 hidden xl:block"
+        >
+          <div className="relative">
+            <img
+              src="https://images.unsplash.com/photo-1551190822-a9333d879b1f?w=480&h=360&fit=crop&auto=format"
+              alt="AI Medical Technology"
+              className="w-[420px] rounded-2xl shadow-2xl shadow-slate-200 object-cover"
+            />
+            <div className="absolute -bottom-4 -left-4 card shadow-lg px-4 py-3 flex items-center gap-3">
+              <div className="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
+                <Activity className="w-4 h-4 text-emerald-600" />
+              </div>
+              <div>
+                <div className="text-xs font-semibold text-slate-900">AI Active</div>
+                <div className="text-[11px] text-slate-400">Analyzing symptoms…</div>
+              </div>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-soft" />
             </div>
           </div>
-          <p className="text-gray-400 mb-4">
-            Revolutionizing healthcare with artificial intelligence
-          </p>
-          <p className="text-gray-500 text-sm">
-            © 2024 MVK Solutions. All rights reserved.
-          </p>
+        </motion.div>
+      </section>
+
+      <section className="px-6 lg:px-16 py-24 bg-white border-t border-slate-100">
+        <FadeUp className="mb-16">
+          <p className="section-label mb-3">Platform</p>
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+            <h2 className="font-display text-4xl md:text-5xl font-700 text-slate-900 tracking-tight max-w-lg">
+              Everything you need, nothing you don't.
+            </h2>
+            <p className="text-slate-500 text-base max-w-sm leading-relaxed">
+              A focused set of clinical tools, thoughtfully designed for real-world workflows.
+            </p>
+          </div>
+        </FadeUp>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-slate-100 border border-slate-100 rounded-xl overflow-hidden">
+          {features.map((f, i) => {
+            const Icon = f.icon;
+            return (
+              <FadeUp key={f.name} delay={i * 0.05}>
+                <Link
+                  to={f.href}
+                  className="group flex flex-col gap-4 p-8 bg-white hover:bg-slate-50 transition-base h-full"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-slate-100 group-hover:bg-[#1E40AF]/10 flex items-center justify-center transition-base">
+                    <Icon className="w-4.5 h-4.5 text-slate-500 group-hover:text-[#1E40AF] transition-base" />
+                  </div>
+                  <div>
+                    <h3 className="font-display font-600 text-slate-900 mb-1.5">{f.name}</h3>
+                    <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs font-medium text-[#1E40AF] opacity-0 group-hover:opacity-100 transition-base mt-auto">
+                    Open <ArrowRight className="w-3.5 h-3.5" />
+                  </div>
+                </Link>
+              </FadeUp>
+            );
+          })}
         </div>
-      </footer>
+      </section>
+
+      <section className="px-6 lg:px-16 py-24 bg-[#F8FAFC]">
+        <div className="grid lg:grid-cols-4 gap-8">
+          {stats.map((s, i) => (
+            <FadeUp key={s.label} delay={i * 0.08} className="text-center lg:text-left">
+              <div className="font-display text-5xl font-800 text-[#1E40AF] tracking-tight mb-2">{s.value}</div>
+              <div className="text-sm text-slate-500">{s.label}</div>
+            </FadeUp>
+          ))}
+        </div>
+      </section>
+
+      <section className="px-6 lg:px-16 py-24 bg-white border-t border-slate-100">
+        <FadeUp className="mb-14">
+          <p className="section-label mb-3">Testimonials</p>
+          <h2 className="font-display text-4xl font-700 text-slate-900 tracking-tight max-w-sm">
+            Trusted by those who matter.
+          </h2>
+        </FadeUp>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          {testimonials.map((t, i) => (
+            <FadeUp key={t.author} delay={i * 0.07}>
+              <div className={`relative p-8 rounded-xl border transition-base ${
+                i === currentTestimonial ? 'border-[#1E40AF]/30 bg-blue-50/40' : 'border-slate-200 bg-white'
+              }`}>
+                <div className="flex gap-0.5 mb-6">
+                  {[...Array(5)].map((_, j) => (
+                    <Star key={j} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                  ))}
+                </div>
+                <p className="text-slate-700 leading-relaxed mb-8 text-[15px]">"{t.quote}"</p>
+                <div className="flex items-center gap-3">
+                  <img src={t.img} alt={t.author} className="w-9 h-9 rounded-full object-cover" />
+                  <div>
+                    <div className="text-sm font-semibold text-slate-900">{t.author}</div>
+                    <div className="text-xs text-slate-400">{t.role}</div>
+                  </div>
+                </div>
+              </div>
+            </FadeUp>
+          ))}
+        </div>
+      </section>
+
+      <section className="px-6 lg:px-16 py-24 bg-[#1E40AF]">
+        <div className="max-w-2xl">
+          <FadeUp>
+            <p className="text-blue-300 text-sm font-medium mb-4">Get started</p>
+            <h2 className="font-display text-4xl md:text-5xl font-700 text-white tracking-tight mb-6 leading-tight">
+              Ready to experience the future of care?
+            </h2>
+            <p className="text-blue-200 text-base leading-relaxed mb-10 max-w-md">
+              Join thousands of healthcare professionals and patients who rely on AI Doctor every day.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                to="/dashboard"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-[#1E40AF] rounded-lg text-sm font-semibold hover:bg-blue-50 transition-base"
+              >
+                Get Started
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                to="/login"
+                className="inline-flex items-center gap-2 px-5 py-2.5 border border-blue-400 text-blue-100 rounded-lg text-sm font-medium hover:border-blue-300 hover:text-white transition-base"
+              >
+                Sign In
+              </Link>
+            </div>
+            <p className="text-blue-400 text-xs mt-5">No credit card required · HIPAA compliant · Free to start</p>
+          </FadeUp>
+        </div>
+      </section>
     </div>
   );
 };
